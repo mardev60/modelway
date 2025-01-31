@@ -26,6 +26,9 @@ export class Model extends Document {
 
   @Prop({ required: true, type: Date })
   last_ping: Date;
+
+  @Prop({ required: true })
+  classment: number;
 }
 
 export const ModelSchema = SchemaFactory.createForClass(Model);

@@ -4,9 +4,17 @@ import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ModelsModule } from './models/models.module';
 import { ProvidersModule } from './providers/providers.module';
+import { PingModule } from './ping/ping.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [MongooseModule.forRoot('mongodb+srv://makiluspn:Uqkdyc8y80BEFe4p@modelway.ofy26.mongodb.net/mw_db?retryWrites=true&w=majority&appName=ModelWay'), ModelsModule, ProvidersModule],
+  imports: [
+    MongooseModule.forRoot('mongodb+srv://makiluspn:Uqkdyc8y80BEFe4p@modelway.ofy26.mongodb.net/mw_db?retryWrites=true&w=majority&appName=ModelWay'), 
+    ModelsModule, 
+    ProvidersModule, 
+    PingModule, 
+    ConfigModule.forRoot()
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

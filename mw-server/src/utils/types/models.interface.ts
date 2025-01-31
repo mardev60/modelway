@@ -8,4 +8,5 @@ export interface Model {
   output_price: number;
   latency: number;
   last_ping: Date;
+  classment: number;
 }

@@ -21,9 +21,11 @@
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
+    "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/mongoose": "^11.0.1",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/schedule": "^5.0.1",
     "mongoose": "^8.9.5",
     "openai": "^4.81.0",
     "reflect-metadata": "^0.2.0",
