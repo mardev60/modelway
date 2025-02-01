@@ -6,6 +6,7 @@ import { ModelsModule } from './models/models.module';
 import { ProvidersModule } from './providers/providers.module';
 import { PingModule } from './ping/ping.module';
 import { ConfigModule } from '@nestjs/config';
+import { DatabaseModule } from './database/models.module';
 
 @Module({
   imports: [
@@ -13,7 +14,8 @@ import { ConfigModule } from '@nestjs/config';
     ModelsModule, 
     ProvidersModule, 
     PingModule, 
-    ConfigModule.forRoot()
+    ConfigModule.forRoot(),
+    DatabaseModule
   ],
   controllers: [AppController],
   providers: [AppService],

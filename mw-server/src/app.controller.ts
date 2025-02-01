@@ -28,6 +28,6 @@ export class AppController {
 
     const lastUserMessage = messages.reverse().find((msg) => msg.role === 'user')?.content || 'No user message provided.';
 
-    return this.appService.callApi(model, systemPrompt, userPrompt);
+    return this.appService.callApi({model, systemPrompt, userPrompt});
   }
 }
