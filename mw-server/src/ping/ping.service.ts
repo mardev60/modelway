@@ -1,11 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Cron, CronExpression } from '@nestjs/schedule';
 import { Model } from 'mongoose';
 import OpenAI from 'openai';
 import { ModelsService } from 'src/models/models.service';
-import { Provider as ProviderDocument } from 'src/utils/schemas/providers.schema';
 import { Model as ModelDocument } from 'src/utils/schemas/models.schema';
+import { Provider as ProviderDocument } from 'src/utils/schemas/providers.schema';
 
 @Injectable()
 export class PingService {
@@ -75,21 +74,14 @@ export class PingService {
       }),
     );
 
-    this.providersByResponseTimes = allResponses.sort(
-      (a, b) => a.responseTime - b.responseTime,
-    );
-
-    const groupedProviders = this.providersByResponseTimes.reduce(
-      (acc, item) => {
-        const name = item.provider.name;
-        if (!acc[name]) {
-          acc[name] = [];
-        }
-        acc[name].push(item);
-        return acc;
-      },
-      {},
-    );
+    const groupedProviders = allResponses.reduce((acc, item) => {
+      const name = item.provider.name;
+      if (!acc[name]) {
+        acc[name] = [];
+      }
+      acc[name].push(item);
+      return acc;
+    }, {});
 
     this.result = Object.entries(groupedProviders).map(([name, providers]) => ({
       name,
@@ -102,28 +94,61 @@ export class PingService {
   }
 
   async updateProvidersStatus() {
+    // Collecte les mises à jour pour chaque providerGroup
     const updatePromises = this.result.flatMap((providerGroup) =>
-      providerGroup.providers.map((provider, index) => ({
-        id: provider.provider._id,
-        responseTime: provider.responseTime,
-        index: index + 1,
-      })),
+      this.generateUpdates(providerGroup),
     );
 
-    await Promise.all(
-      updatePromises.map(async (update) => {
-        return this.modelModel.updateOne(
-          { _id: update.id },
-          {
-            $set: {
-              latency: update.responseTime,
-              last_ping: new Date(),
-              classment: update.index,
+    try {
+      // Met à jour la base de données en parallèle pour chaque provider
+      await Promise.all(
+        updatePromises.map(async (update) => {
+          return this.modelModel.updateOne(
+            { _id: update.id },
+            {
+              $set: {
+                latency: update.responseTime,
+                last_ping: new Date(),
+                classment: update.classment,
+              },
             },
-          },
-        );
-      }),
+          );
+        }),
+      );
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour des providers :', error);
+    }
+  }
+
+  /**
+   * Trie les providers en plaçant ceux avec `responseTime === null` à la fin.
+   */
+  private sortProvidersByResponseTime(providers) {
+    return providers.sort((a, b) => {
+      const aIsNull = a.responseTime === null;
+      const bIsNull = b.responseTime === null;
+
+      const areBothNull = aIsNull === bIsNull; // Vérifie si `a` et `b` ont le même état pour `responseTime`
+      const providerRanking = aIsNull ? 1 : -1; // Attribue un classement basé sur le fait que `a` soit null ou non
+      return areBothNull ? 0 : providerRanking; // Si `a` et `b` ont le même état (null ou non), ils restent dans l'ordre initial (retourne 0).
+    });
+  }
+
+  /**
+   * Génère un tableau de mises à jour avec classement.
+   */
+  private generateUpdates(providerGroup) {
+    const sortedProviders = this.sortProvidersByResponseTime(
+      providerGroup.providers,
     );
+
+    sortedProviders.map((provider, index) => ({
+      id: provider.provider._id,
+      responseTime: provider.responseTime,
+      classment: index + 1,
+    }));
+
+    return sortedProviders;
   }
 
   getApiKey(providerId: string) {
