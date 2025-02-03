@@ -142,13 +142,11 @@ export class PingService {
       providerGroup.providers,
     );
 
-    sortedProviders.map((provider, index) => ({
+    return sortedProviders.map((provider, index) => ({
       id: provider.provider._id,
       responseTime: provider.responseTime,
       classment: index + 1,
     }));
-
-    return sortedProviders;
   }
 
   getApiKey(providerId: string) {
