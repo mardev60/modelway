@@ -10,6 +10,7 @@ import { ModelesPageComponent } from './pages/modeles-page/modeles-page.componen
 import { ProvidersPageComponent } from './pages/providers-page/providers-page.component';
 import { RegisterPageComponent } from './pages/register-page/register-page.component';
 import { NavbarComponent } from './components/navbar/navbar.component';
+import { SidebarComponent } from './components/sidebar/sidebar.component';
 
 @NgModule({
   declarations: [
@@ -21,6 +22,7 @@ import { NavbarComponent } from './components/navbar/navbar.component';
     DocumentationPageComponent,
     ChatPageComponent,
     NavbarComponent,
+    SidebarComponent,
   ],
   imports: [BrowserModule, AppRoutingModule],
   providers: [],
