@@ -11,7 +11,6 @@ export class PingService {
   private readonly logger = new Logger(PingService.name);
   private openAI: OpenAI;
   private allProviders: any[] = [];
-  private providersByResponseTimes: any[] = [];
   private result = [];
 
   constructor(
@@ -22,8 +21,8 @@ export class PingService {
     private readonly modelModel: Model<ModelDocument>,
   ) {}
 
-  //@Cron(CronExpression.EVERY_30_SECONDS)
   async pingAllProviders() {
+    this.logger.log('Starting to ping all providers');
     let allModelsProviders = await this.modelService.findAll();
     this.allProviders = await this.providerModel.find().exec();
 
@@ -31,11 +30,11 @@ export class PingService {
 
     await Promise.all(
       Object.entries(allModelsProviders).map(async ([modelName, providers]) => {
-        this.logger.debug(`Pinging ${modelName} providers`);
+        this.logger.debug(`Pinging providers for model: ${modelName}`);
 
         await Promise.all(
           providers.map(async (provider) => {
-            this.logger.debug(`Pinging ${provider.baseURL} provider`);
+            this.logger.debug(`Pinging provider at ${provider.baseURL}`);
 
             this.openAI = new OpenAI({
               baseURL: provider.baseURL,
@@ -43,9 +42,10 @@ export class PingService {
             });
 
             const start = Date.now();
+            const timeout = 10000;
 
             try {
-              await this.openAI.chat.completions.create({
+              const responsePromise = this.openAI.chat.completions.create({
                 model: provider.src_model,
                 messages: [
                   { role: 'system', content: '-' },
@@ -54,8 +54,17 @@ export class PingService {
                 max_tokens: 1,
               });
 
-              const duration = Date.now() - start;
-              console.log(`CALL -- ${provider.baseURL} -- `, duration);
+              await Promise.race([
+                responsePromise,
+                new Promise((_, reject) =>
+                  setTimeout(() => reject(new Error('Timeout')), timeout),
+                ),
+              ]);
+
+              let duration = Date.now() - start;
+              this.logger.log(
+                `Provider ${provider.baseURL} responded in ${duration}ms`,
+              );
 
               allResponses.push({
                 provider,
@@ -63,6 +72,9 @@ export class PingService {
                 success: true,
               });
             } catch (error) {
+              this.logger.warn(
+                `Failed to ping provider ${provider.baseURL}: ${error.message}`,
+              );
               allResponses.push({
                 provider,
                 responseTime: null,
@@ -88,19 +100,17 @@ export class PingService {
       providers,
     }));
 
-    console.log('----', this.result, '----');
-
+    this.logger.log('Completed provider pinging');
     this.updateProvidersStatus();
   }
 
   async updateProvidersStatus() {
-    // Collecte les mises à jour pour chaque providerGroup
+    this.logger.log('Updating provider statuses');
     const updatePromises = this.result.flatMap((providerGroup) =>
       this.generateUpdates(providerGroup),
     );
 
     try {
-      // Met à jour la base de données en parallèle pour chaque provider
       await Promise.all(
         updatePromises.map(async (update) => {
           return this.modelModel.updateOne(
@@ -115,38 +125,60 @@ export class PingService {
           );
         }),
       );
+      this.logger.log('Provider statuses updated successfully');
     } catch (error) {
-      console.error('Erreur lors de la mise à jour des providers :', error);
+      this.logger.error('Error updating provider statuses', error.stack);
     }
   }
 
-  /**
-   * Trie les providers en plaçant ceux avec `responseTime === null` à la fin.
-   */
-  private sortProvidersByResponseTime(providers) {
-    return providers.sort((a, b) => {
-      const aIsNull = a.responseTime === null;
-      const bIsNull = b.responseTime === null;
+  private calculateScore(provider, bestLatency) {
+    if (!provider || provider.responseTime === null) return -Infinity;
 
-      const areBothNull = aIsNull === bIsNull; // Vérifie si `a` et `b` ont le même état pour `responseTime`
-      const providerRanking = aIsNull ? 1 : -1; // Attribue un classement basé sur le fait que `a` soit null ou non
-      return areBothNull ? 0 : providerRanking; // Si `a` et `b` ont le même état (null ou non), ils restent dans l'ordre initial (retourne 0).
+    const weightLatency = 0.6;
+    const weightInputCost = 0.15;
+    const weightOutputCost = 0.25;
+
+    const latencyRatio = bestLatency / provider.responseTime;
+    const normalizedLatency = Math.log(latencyRatio + 1);
+
+    const penalty =
+      provider.responseTime > 2000
+        ? Math.exp((provider.responseTime - 2000) / 1000) * 0.1
+        : 1;
+
+    return (
+      weightLatency * normalizedLatency * penalty +
+      weightInputCost * (1 - this.normalize(provider?.provider?.input_price)) +
+      weightOutputCost * (1 - this.normalize(provider?.provider?.output_price))
+    );
+  }
+
+  private sortProviders(providers) {
+    const bestLatency = Math.min(
+      ...providers.map((p) => p.responseTime || Infinity),
+    );
+    return providers.sort((a, b) => {
+      if (a.responseTime === null) return 1;
+      if (b.responseTime === null) return -1;
+      return (
+        this.calculateScore(b, bestLatency) -
+        this.calculateScore(a, bestLatency)
+      );
     });
   }
 
-  /**
-   * Génère un tableau de mises à jour avec classement.
-   */
   private generateUpdates(providerGroup) {
-    const sortedProviders = this.sortProvidersByResponseTime(
-      providerGroup.providers,
-    );
+    const sortedProviders = this.sortProviders(providerGroup.providers);
 
     return sortedProviders.map((provider, index) => ({
       id: provider.provider._id,
       responseTime: provider.responseTime,
       classment: index + 1,
     }));
+  }
+
+  private normalize(value: number) {
+    return value > 0 ? 1 / value : 0;
   }
 
   getApiKey(providerId: string) {
