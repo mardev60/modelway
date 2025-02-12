@@ -3,26 +3,26 @@ import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
+import { NavbarComponent } from './components/navbar/navbar.component';
 import { ChatPageComponent } from './pages/chat-page/chat-page.component';
-import { DocumentationPageComponent } from './pages/documentation-page/documentation-page.component';
+import { DocsPageComponent } from './pages/documentation-page/docs-page.component';
 import { LoginPageComponent } from './pages/login-page/login-page.component';
-import { ModelesPageComponent } from './pages/modeles-page/modeles-page.component';
+import { ModelsPageComponent } from './pages/models-page/models-page.component';
 import { ProvidersPageComponent } from './pages/providers-page/providers-page.component';
 import { RegisterPageComponent } from './pages/register-page/register-page.component';
-import { NavbarComponent } from './components/navbar/navbar.component';
-import { SidebarComponent } from './components/sidebar/sidebar.component';
+import { DashboardPageComponent } from './pages/dashboard-page/dashboard-page.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     RegisterPageComponent,
     LoginPageComponent,
-    ModelesPageComponent,
+    ModelsPageComponent,
     ProvidersPageComponent,
-    DocumentationPageComponent,
+    DocsPageComponent,
     ChatPageComponent,
     NavbarComponent,
-    SidebarComponent,
+    DashboardPageComponent,
   ],
   imports: [BrowserModule, AppRoutingModule],
   providers: [],

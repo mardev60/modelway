@@ -1,35 +1,42 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { ChatPageComponent } from './pages/chat-page/chat-page.component';
+import { DashboardPageComponent } from './pages/dashboard-page/dashboard-page.component';
+import { DocsPageComponent } from './pages/documentation-page/docs-page.component';
 import { LoginPageComponent } from './pages/login-page/login-page.component';
-import { ModelesPageComponent } from './pages/modeles-page/modeles-page.component';
+import { ModelsPageComponent } from './pages/models-page/models-page.component';
 import { ProvidersPageComponent } from './pages/providers-page/providers-page.component';
 import { RegisterPageComponent } from './pages/register-page/register-page.component';
 
 const routes: Routes = [
   {
-    path: 'inscription',
-    component: RegisterPageComponent,
+    path: 'dashboard',
+    component: DashboardPageComponent,
   },
   {
-    path: 'connexion',
-    component: LoginPageComponent,
+    path: 'models',
+    component: ModelsPageComponent,
   },
   {
-    path: 'modeles',
-    component: ModelesPageComponent,
-  },
-  {
-    path: 'fournisseurs',
+    path: 'providers',
     component: ProvidersPageComponent,
-  },
-  {
-    path: 'inscription',
-    component: RegisterPageComponent,
   },
   {
     path: 'chat',
     component: ChatPageComponent,
+  },
+  {
+    path: 'docs',
+    component: DocsPageComponent,
+  },
+  {
+    path: 'login',
+    component: LoginPageComponent,
+  },
+
+  {
+    path: 'register',
+    component: RegisterPageComponent,
   },
 ];
 
