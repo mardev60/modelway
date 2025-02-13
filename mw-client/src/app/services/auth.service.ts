@@ -16,8 +16,11 @@ export class AuthService {
 
   async signUp(email: string, password: string) {
     try {
-      await this.afAuth.createUserWithEmailAndPassword(email, password);
-      this.toastr.success('Compte créé avec succès');
+      const userCredential = await this.afAuth.createUserWithEmailAndPassword(email, password);
+      if (userCredential.user) {
+        await userCredential.user.sendEmailVerification();
+      }
+      this.toastr.success('Account created successfully');
       this.router.navigate(['/auth/login']);
     } catch (error: any) {
       this.handleAuthError(error);
@@ -27,7 +30,7 @@ export class AuthService {
   async signIn(email: string, password: string) {
     try {
       await this.afAuth.signInWithEmailAndPassword(email, password);
-      this.toastr.success('Connexion réussie');
+      this.toastr.success('Login successful');
       this.router.navigate(['/app/dashboard']);
     } catch (error: any) {
       this.handleAuthError(error);
@@ -38,7 +41,7 @@ export class AuthService {
     try {
       const provider = new firebase.auth.GoogleAuthProvider();
       await this.afAuth.signInWithPopup(provider);
-      this.toastr.success('Connexion avec Google réussie');
+      this.toastr.success('Google login successful');
       this.router.navigate(['/app/dashboard']);
     } catch (error: any) {
       this.handleAuthError(error);
@@ -48,7 +51,7 @@ export class AuthService {
   async signOut() {
     try {
       await this.afAuth.signOut();
-      this.toastr.success('Déconnexion réussie');
+      this.toastr.success('Logout successful');
       this.router.navigate(['/auth/login']);
     } catch (error: any) {
       this.handleAuthError(error);
@@ -58,7 +61,7 @@ export class AuthService {
   async sendPasswordResetEmail(email: string) {
     try {
       await this.afAuth.sendPasswordResetEmail(email);
-      this.toastr.success('Email de réinitialisation envoyé');
+      this.toastr.success('Password reset email sent');
       return true;
     } catch (error: any) {
       this.handleAuthError(error);
@@ -70,7 +73,7 @@ export class AuthService {
     try {
       // Implement your OTP verification logic here
       // This is just a placeholder
-      this.toastr.success('Mot de passe réinitialisé avec succès');
+      this.toastr.success('Password reset successful');
       this.router.navigate(['/auth/login']);
     } catch (error: any) {
       this.handleAuthError(error);
@@ -89,7 +92,7 @@ export class AuthService {
   async confirmPasswordReset(code: string, newPassword: string) {
     try {
       await this.afAuth.confirmPasswordReset(code, newPassword);
-      this.toastr.success('Mot de passe réinitialisé avec succès');
+      this.toastr.success('Password reset successful');
       this.router.navigate(['/auth/login']);
     } catch (error: any) {
       this.handleAuthError(error);
@@ -97,32 +100,32 @@ export class AuthService {
   }
 
   private handleAuthError(error: any) {
-    let errorMessage = 'Une erreur est survenue';
+    let errorMessage = 'An error occurred';
     
     switch (error.code) {
       case 'auth/email-already-in-use':
-        errorMessage = 'Cet email est déjà utilisé';
+        errorMessage = 'This email is already in use';
         break;
       case 'auth/invalid-email':
-        errorMessage = 'Email invalide';
+        errorMessage = 'Invalid email';
         break;
       case 'auth/operation-not-allowed':
-        errorMessage = 'Opération non autorisée';
+        errorMessage = 'Operation not allowed';
         break;
       case 'auth/weak-password':
-        errorMessage = 'Le mot de passe est trop faible';
+        errorMessage = 'Password is too weak';
         break;
       case 'auth/user-disabled':
-        errorMessage = 'Ce compte a été désactivé';
+        errorMessage = 'This account has been disabled';
         break;
       case 'auth/user-not-found':
-        errorMessage = 'Aucun compte trouvé avec cet email';
+        errorMessage = 'No account found with this email';
         break;
       case 'auth/wrong-password':
-        errorMessage = 'Mot de passe incorrect';
+        errorMessage = 'Incorrect password';
         break;
       case 'auth/too-many-requests':
-        errorMessage = 'Trop de tentatives, veuillez réessayer plus tard';
+        errorMessage = 'Too many attempts, please try again later';
         break;
     }
 
