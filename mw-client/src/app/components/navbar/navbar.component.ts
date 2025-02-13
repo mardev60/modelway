@@ -1,5 +1,6 @@
 import { Component, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-navbar',
@@ -12,11 +13,11 @@ export class NavbarComponent {
     'https://i1.sndcdn.com/artworks-fbm27AXQOyXmgZuu-nET5Zw-t500x500.jpg';
 
   navLinks = [
-    { path: '/dashboard', label: 'Dashboard' },
-    { path: '/models', label: 'Models' },
-    { path: '/providers', label: 'Providers' },
-    { path: '/chat', label: 'Chat' },
-    { path: '/docs', label: 'Docs' },
+    { path: '/app/dashboard', label: 'Dashboard' },
+    { path: '/app/models', label: 'Models' },
+    { path: '/app/providers', label: 'Providers' },
+    { path: '/app/chat', label: 'Chat' },
+    { path: '/app/docs', label: 'Docs' },
   ];
 
   userMenuItems = [
@@ -26,15 +27,17 @@ export class NavbarComponent {
     { label: '🚪 Logout', path: '', action: () => this.logout() },
   ];  
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private authService: AuthService
+  ) {}
 
   toggleMenu() {
     this.menuOpen = !this.menuOpen;
   }
 
-  logout() {
-    console.log('Logout user');
-    this.menuOpen = false;
+  async logout() {
+    await this.authService.signOut();
   }
 
   isActive(path: string): boolean {

@@ -28,7 +28,7 @@ export class AuthService {
     try {
       await this.afAuth.signInWithEmailAndPassword(email, password);
       this.toastr.success('Connexion réussie');
-      this.router.navigate(['/dashboard']);
+      this.router.navigate(['/app/dashboard']);
     } catch (error: any) {
       this.handleAuthError(error);
     }
@@ -39,7 +39,7 @@ export class AuthService {
       const provider = new firebase.auth.GoogleAuthProvider();
       await this.afAuth.signInWithPopup(provider);
       this.toastr.success('Connexion avec Google réussie');
-      this.router.navigate(['/dashboard']);
+      this.router.navigate(['/app/dashboard']);
     } catch (error: any) {
       this.handleAuthError(error);
     }
@@ -49,7 +49,7 @@ export class AuthService {
     try {
       await this.afAuth.signOut();
       this.toastr.success('Déconnexion réussie');
-      this.router.navigate(['/login']);
+      this.router.navigate(['/auth/login']);
     } catch (error: any) {
       this.handleAuthError(error);
     }
