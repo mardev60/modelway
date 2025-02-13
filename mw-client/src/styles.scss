@@ -2,11 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+body {
+  min-height: 100vh;
+  background-image: url('/bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
 .hexagon-container {
   position: relative;
-  width: 38px;
-  padding-right: 30px;
-  height: 34px;
+  width: 43px;
+  padding-right: 34px;
+  height: 40px;
   display: flex;
   justify-content: center;
   align-items: center;

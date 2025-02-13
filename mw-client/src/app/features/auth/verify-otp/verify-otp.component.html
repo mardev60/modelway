@@ -8,13 +8,13 @@
     <!-- Loading State -->
     <div *ngIf="isLoading" class="text-center">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-      <p class="mt-4 text-gray-600">Vérification du lien...</p>
+      <p class="mt-4 text-gray-600">Verifying link...</p>
     </div>
 
     <!-- Form -->
     <ng-container *ngIf="!isLoading && isValidCode">
-      <h2 class="text-2xl font-bold text-center mb-6">Réinitialisation du mot de passe</h2>
-      <p class="text-gray-600 text-center mb-6">Pour le compte : {{ email }}</p>
+      <h2 class="text-2xl font-bold text-center mb-6">Password reset</h2>
+      <p class="text-gray-600 text-center mb-6">For account: {{ email }}</p>
 
       <form [formGroup]="verifyForm" (ngSubmit)="onSubmit()" class="mb-12">
         <!-- New Password Input -->
@@ -24,7 +24,7 @@
               <fa-icon [icon]="faLock"></fa-icon>
               <div class="border-r border-gray-300 h-5 ml-3"></div>
             </span>
-            <input type="password" formControlName="newPassword" class="w-full p-3 pl-12 border rounded-md focus:ring focus:ring-blue-200" placeholder="Nouveau mot de passe">
+            <input type="password" formControlName="newPassword" class="w-full p-3 pl-12 border rounded-md focus:ring focus:ring-blue-200 bg-transparent" placeholder="New password">
           </div>
         </div>
 
@@ -35,20 +35,20 @@
               <fa-icon [icon]="faLock"></fa-icon>
               <div class="border-r border-gray-300 h-5 ml-3"></div>
             </span>
-            <input type="password" formControlName="confirmPassword" class="w-full p-3 pl-12 border rounded-md focus:ring focus:ring-blue-200" placeholder="Confirmer le mot de passe">
+            <input type="password" formControlName="confirmPassword" class="w-full p-3 pl-12 border rounded-md focus:ring focus:ring-blue-200 bg-transparent" placeholder="Confirm password">
           </div>
         </div>
 
         <!-- Submit Button -->
         <button type="submit" class="w-full text-black p-3 rounded-md border border-gray-300 hover:bg-gray-100 hover:font-semibold">
-          Réinitialiser le mot de passe
+          Reset password
         </button>
       </form>
     </ng-container>
 
     <!-- Back to Login Link -->
     <p class="text-center">
-      <a routerLink="/auth/login" class="text-gray-700 font-semibold hover:underline">Retour à la connexion</a>
+      <a routerLink="/auth/login" class="text-gray-700 font-semibold hover:underline">Back to login</a>
     </p>
   </div>
 </div> 

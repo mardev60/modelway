@@ -10,7 +10,7 @@ import { AuthService } from '../../services/auth.service';
 export class NavbarComponent {
   menuOpen = false;
   userProfileImg =
-    'https://i1.sndcdn.com/artworks-fbm27AXQOyXmgZuu-nET5Zw-t500x500.jpg';
+    'https://img.myloview.fr/images/funny-cartoon-monster-face-vector-monster-square-avatar-700-196215185.jpg';
 
   navLinks = [
     { path: '/app/dashboard', label: 'Dashboard' },
