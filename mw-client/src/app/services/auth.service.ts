@@ -4,7 +4,6 @@ import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import firebase from 'firebase/compat/app';
 import { ApiService } from './api.service';
-import { firstValueFrom } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -36,12 +35,7 @@ export class AuthService {
       const token = await userCredential.user?.getIdToken();
       
       if (token) {
-        // Send token to backend and get session token
-        const response = await firstValueFrom(
-          this.apiService.post<{token: string}>('/auth/login', { firebaseToken: token })
-        );
-        
-        this.apiService.setAuthToken(response.token);
+        this.apiService.setAuthToken(token);
         this.toastr.success('Login successful');
         this.router.navigate(['/app/dashboard']);
       }
