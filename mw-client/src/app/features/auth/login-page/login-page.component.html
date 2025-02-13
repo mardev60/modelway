@@ -1,0 +1,63 @@
+<div class="flex items-center justify-center w-full">
+  <div class="w-96 rounded-lg px-84 py-8">
+    <!-- Logo Section -->
+    <div class="flex justify-center mb-6">
+      <img src="/logo.png" alt="Logo" class="h-32">
+    </div>
+
+    <!-- Login Form -->
+    <form [formGroup]="loginForm" (ngSubmit)="onLogin()" class="mb-12">
+      <!-- Email Input -->
+      <div class="mb-6">
+        <div class="relative mt-1">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+            <fa-icon [icon]="faUser"></fa-icon>
+            <div class="border-r border-gray-300 h-5 ml-3"></div>
+          </span>
+          <input type="email" formControlName="email" class="w-full p-3 pl-12 border rounded-md focus:ring focus:ring-blue-200" placeholder="E-mail">
+        </div>
+      </div>
+
+      <!-- Password Input -->
+      <div class="mb-6">
+        <div class="relative mt-1">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+            <fa-icon [icon]="faLock"></fa-icon>
+            <div class="border-r border-gray-300 h-5 ml-3"></div>
+          </span>
+          <input type="password" formControlName="password" class="w-full p-3 pl-12 border rounded-md focus:ring focus:ring-blue-200" placeholder="Password">
+        </div>
+      </div>
+
+      <!-- Login Button -->
+      <button type="submit" class="w-full text-black p-3 rounded-md border border-gray-300 hover:bg-gray-100 hover:font-semibold">
+        Se connecter
+      </button>
+    </form>
+
+    <!-- Divider -->
+    <div class="my-4 flex items-center">
+      <hr class="w-full border-gray-300 mr-8">
+      <span class="px-3 text-gray-500 whitespace-nowrap">Ou continue avec</span>
+      <hr class="w-full border-gray-300 ml-8">
+    </div>
+
+    <!-- Social Login Buttons -->
+    <div class="flex justify-center space-x-8">
+      <button class="p-3 border rounded-md w-14 flex items-center justify-center text-gray-600 hover:text-[#4285F4] hover:bg-gray-100" (click)="loginWithGoogle()">
+        <fa-icon [icon]="faGoogle"></fa-icon>
+      </button>
+      <button class="p-3 border rounded-md w-14 flex items-center justify-center text-gray-600 hover:text-[#333333] hover:bg-gray-100" (click)="loginWithGithub()">
+        <fa-icon [icon]="faGithub"></fa-icon>
+      </button>
+      <button class="p-3 border rounded-md w-14 flex items-center justify-center text-gray-600 hover:text-[#1877F2] hover:bg-gray-100" (click)="loginWithFacebook()">
+        <fa-icon [icon]="faFacebook"></fa-icon>
+      </button>
+    </div>
+
+    <!-- Register Link -->
+    <p class="text-center mt-12">
+      <a routerLink="/register" class="text-gray-700 font-semibold hover:underline">Je n'ai pas encore de compte</a>
+    </p>
+  </div>
+</div>

@@ -1,43 +1,26 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { ChatPageComponent } from './pages/chat-page/chat-page.component';
-import { DashboardPageComponent } from './pages/dashboard-page/dashboard-page.component';
-import { DocsPageComponent } from './pages/documentation-page/docs-page.component';
-import { LoginPageComponent } from './pages/login-page/login-page.component';
-import { ModelsPageComponent } from './pages/models-page/models-page.component';
-import { ProvidersPageComponent } from './pages/providers-page/providers-page.component';
-import { RegisterPageComponent } from './pages/register-page/register-page.component';
+import { AuthGuard, redirectUnauthorizedTo } from '@angular/fire/auth-guard';
+import { MainLayoutComponent } from './layouts/main-layout/main-layout.component';
+import { AuthLayoutComponent } from './layouts/auth-layout/auth-layout.component';
+import { dashboardRoutes } from './features/dashboard/dashboard.routes';
+import { authRoutes } from './features/auth/auth.routes';
+
+const redirectUnauthorizedToLogin = () => redirectUnauthorizedTo(['auth', 'login']); 
 
 const routes: Routes = [
   {
-    path: 'dashboard',
-    component: DashboardPageComponent,
+    path: 'auth',
+    component: AuthLayoutComponent,
+    children: authRoutes
   },
   {
-    path: 'models',
-    component: ModelsPageComponent,
+    path: 'app',
+    component: MainLayoutComponent,
+    children: dashboardRoutes,
+    canActivate: [AuthGuard], data: { authGuardPipe: redirectUnauthorizedToLogin }
   },
-  {
-    path: 'providers',
-    component: ProvidersPageComponent,
-  },
-  {
-    path: 'chat',
-    component: ChatPageComponent,
-  },
-  {
-    path: 'docs',
-    component: DocsPageComponent,
-  },
-  {
-    path: 'login',
-    component: LoginPageComponent,
-  },
-
-  {
-    path: 'register',
-    component: RegisterPageComponent,
-  },
+  { path: '**', redirectTo: 'auth/login' } // Redirection globale
 ];
 
 @NgModule({
