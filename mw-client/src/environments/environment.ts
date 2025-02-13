@@ -1,5 +1,6 @@
 export const environment: any = {
   production: false,
+  apiUrl: 'http://localhost:3000', // Add your backend URL here
   firebase: {
     apiKey: 'AIzaSyCdRhVWFaQaQhp7z-bjAaiccGUKbJDdZ9s',
     authDomain: 'model-way.firebaseapp.com',

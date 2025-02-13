@@ -3,6 +3,8 @@ import { AngularFireAuth } from '@angular/fire/compat/auth';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import firebase from 'firebase/compat/app';
+import { ApiService } from './api.service';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +13,8 @@ export class AuthService {
   constructor(
     private afAuth: AngularFireAuth, 
     private router: Router,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private apiService: ApiService
   ) {}
 
   async signUp(email: string, password: string) {
@@ -29,9 +32,19 @@ export class AuthService {
 
   async signIn(email: string, password: string) {
     try {
-      await this.afAuth.signInWithEmailAndPassword(email, password);
-      this.toastr.success('Login successful');
-      this.router.navigate(['/app/dashboard']);
+      const userCredential = await this.afAuth.signInWithEmailAndPassword(email, password);
+      const token = await userCredential.user?.getIdToken();
+      
+      if (token) {
+        // Send token to backend and get session token
+        const response = await firstValueFrom(
+          this.apiService.post<{token: string}>('/auth/login', { firebaseToken: token })
+        );
+        
+        this.apiService.setAuthToken(response.token);
+        this.toastr.success('Login successful');
+        this.router.navigate(['/app/dashboard']);
+      }
     } catch (error: any) {
       this.handleAuthError(error);
     }
@@ -51,6 +64,7 @@ export class AuthService {
   async signOut() {
     try {
       await this.afAuth.signOut();
+      this.apiService.removeAuthToken();
       this.toastr.success('Logout successful');
       this.router.navigate(['/auth/login']);
     } catch (error: any) {
