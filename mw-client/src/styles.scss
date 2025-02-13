@@ -1,3 +1,41 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.hexagon-container {
+  position: relative;
+  width: 48px;
+  padding-right: 30px;
+  height: 44px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hexagon-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  position: absolute;
+  z-index: 2;
+}
+
+.hexagon-border {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+}
+
+.hexagon-border-outer {
+  background-color: black;
+  transform: scale(1.15);
+  z-index: 1;
+}
+
+.hexagon-border-inner {
+  background-color: orange;
+  transform: scale(1.08);
+  z-index: 1;
+}
