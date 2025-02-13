@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { faUser, faLock } from '@fortawesome/free-solid-svg-icons';
 import { faGoogle, faGithub, faFacebook } from '@fortawesome/free-brands-svg-icons';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-register-page',
@@ -17,7 +18,11 @@ export class RegisterPageComponent {
   faGithub = faGithub;
   faFacebook = faFacebook;
 
-  constructor(private fb: FormBuilder, private authService: AuthService) {
+  constructor(
+    private fb: FormBuilder, 
+    private authService: AuthService,
+    private toastr: ToastrService
+  ) {
     this.registerForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
@@ -33,12 +38,14 @@ export class RegisterPageComponent {
 
   async onRegister() {
     if (this.registerForm.valid) {
-      const { email, password } = this.registerForm.value;
-      try {
-        await this.authService.signUp(email, password);
-      } catch (error) {
-        console.error(error);
+      if (this.registerForm.hasError('mismatch')) {
+        this.toastr.error('Les mots de passe ne correspondent pas');
+        return;
       }
+      const { email, password } = this.registerForm.value;
+      await this.authService.signUp(email, password);
+    } else {
+      this.toastr.error('Veuillez remplir tous les champs correctement');
     }
   }
 

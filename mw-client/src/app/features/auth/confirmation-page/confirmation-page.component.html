@@ -1,0 +1,25 @@
+<div class="flex items-center justify-center w-full">
+  <div class="w-96 rounded-lg px-84 py-8 text-center">
+    <!-- Success Icon -->
+    <div class="flex justify-center mb-6 text-green-500">
+      <fa-icon [icon]="faCheckCircle" size="4x"></fa-icon>
+    </div>
+
+    <!-- Message -->
+    <h2 class="text-2xl font-bold mb-4">Email envoyé !</h2>
+    <p class="text-gray-600 mb-8">
+      Un email de réinitialisation a été envoyé à<br>
+      <span class="font-semibold">{{ email }}</span>
+    </p>
+    <p class="text-sm text-gray-500">
+      Vous allez être redirigé vers la page de connexion dans quelques secondes...
+    </p>
+
+    <!-- Manual redirect link -->
+    <p class="mt-8">
+      <a routerLink="/auth/login" class="text-gray-700 font-semibold hover:underline">
+        Retourner à la connexion
+      </a>
+    </p>
+  </div>
+</div> 
