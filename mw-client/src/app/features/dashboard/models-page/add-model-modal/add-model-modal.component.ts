@@ -21,6 +21,8 @@ export class AddModelModalComponent implements OnInit {
     this.modelForm = this.fb.group({
       provider_id: ['', Validators.required],
       name: ['', Validators.required],
+      src_model: ['', Validators.required],
+      baseURL: ['', [Validators.required, Validators.pattern('https?://.+')]],
       input_price: ['', [Validators.required, Validators.min(0)]],
       output_price: ['', [Validators.required, Validators.min(0)]]
     });
