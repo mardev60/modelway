@@ -1,1 +1,73 @@
-<p>models-page works!</p>
+<div class="max-w-7xl mx-auto p-6">
+  <!-- Header Section -->
+  <div class="flex justify-between items-center mb-8">
+    <div class="flex items-center gap-3">
+      <h1 class="text-xl font-semibold">All models</h1>
+      <span class="text-gray-500">{{ totalModels }}</span>
+    </div>
+    
+    <div class="flex items-center gap-4">
+      <!-- Search Box -->
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        <input
+          type="text"
+          placeholder="Filter models..."
+          (input)="filterModels($event)"
+          class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+        >
+      </div>
+
+      <!-- Sort Dropdown -->
+      <select (change)="sortModels($event)" class="border border-gray-300 rounded-lg px-4 py-2 bg-white">
+        <option>Newest</option>
+        <option>Name A-Z</option>
+        <option>Name Z-A</option>
+        <option>Latency</option>
+      </select>
+
+      <!-- Add New Button -->
+      <button 
+        *ngIf="isAdmin"
+        class="flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700">
+        <span class="text-lg">+</span>
+        Add new
+      </button>
+    </div>
+  </div>
+
+  <!-- Add this right after the header section and before the table -->
+  <div *ngIf="isLoading" class="flex justify-center items-center py-20">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+  </div>
+
+  <!-- Models Table -->
+  <div *ngIf="!isLoading" class="bg-white rounded-lg shadow">
+    <table class="min-w-full">
+      <thead>
+        <tr class="bg-gray-50">
+          <th class="w-8 py-3 px-4">
+            <input type="checkbox" class="rounded">
+          </th>
+          <th class="text-left py-3 px-4">Model</th>
+          <th class="text-left py-3 px-4">Latency</th>
+          <th class="text-left py-3 px-4">Price /1M tokens (Input - Output)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let model of filteredModels" class="border-t border-gray-200">
+          <td class="py-3 px-4">
+            <input type="checkbox" class="rounded">
+          </td>
+          <td class="py-3 px-4">{{ model.name }}</td>
+          <td class="py-3 px-4">{{ model.latency }}</td>
+          <td class="py-3 px-4">{{ model.input_price }}€ - {{ model.output_price }}€</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

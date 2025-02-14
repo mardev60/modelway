@@ -30,6 +30,7 @@ export class UsersService {
         displayName: firebaseUser.displayName,
         photoURL: firebaseUser.photoURL,
         credits: 0,
+        role: 'user'
       });
     } catch (error) {
       throw new Error('Error fetching user info');
@@ -41,6 +42,7 @@ export class UsersService {
       .collection(this.usersCollection)
       .add({
         ...userData,
+        role: userData.role || 'user',
         createdAt: new Date(),
         updatedAt: new Date(),
       });

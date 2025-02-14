@@ -8,4 +8,5 @@ export interface User {
   createdAt?: Date;
   updatedAt?: Date;
   credits?: number;
+  role: 'admin' | 'user';
 } 
