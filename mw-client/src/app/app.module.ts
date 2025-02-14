@@ -30,6 +30,7 @@ import { SettingsPageComponent } from './features/settings/settings-page/setting
 import { AddModelModalComponent } from './features/dashboard/models-page/add-model-modal/add-model-modal.component';
 import { AddProviderModalComponent } from './features/dashboard/providers-page/add-provider-modal/add-provider-modal.component';
 import { ModelProfileComponent } from './features/dashboard/models-page/model-profile/model-profile.component';
+import { HistoryPageComponent } from './features/dashboard/history-page/history-page.component';
 
 @NgModule({
   declarations: [
@@ -50,7 +51,8 @@ import { ModelProfileComponent } from './features/dashboard/models-page/model-pr
     SettingsPageComponent,
     AddModelModalComponent,
     AddProviderModalComponent,
-    ModelProfileComponent
+    ModelProfileComponent,
+    HistoryPageComponent
   ],
   imports: [
     BrowserModule,

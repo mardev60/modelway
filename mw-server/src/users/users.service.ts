@@ -55,16 +55,18 @@ export class UsersService {
     const userDoc = await this.firebaseService
       .getFirestore()
       .collection(this.usersCollection)
-      .doc(userId)
+      .where('uid', '==', userId)
       .get();
+    console.log(userDoc.docs[0].data()); 
 
-    if (!userDoc.exists) {
+    if (userDoc.empty) {
+      console.log('User not found');
       return null;
     }
 
     return {
-      id: userDoc.id,
-      ...userDoc.data(),
+      id: userDoc.docs[0].id,
+      ...userDoc.docs[0].data(),
     } as User;
   }
 } 

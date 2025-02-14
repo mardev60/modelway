@@ -19,30 +19,84 @@
     Effortless access to AI models, optimized for you
   </h1>
 
-  <!-- Recent models section -->
-  <div class="mb-12">
-    <h2 class="text-lg font-bold text-gray-900 mb-6">Recently Used Models</h2>
+  <!-- Recent Models Section -->
+  <div class="p-8 mb-8">
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <h2 class="text-2xl font-bold text-gray-900">Recently Used Models</h2>
+        <p class="text-gray-500 mt-1">Your most frequently used AI models</p>
+      </div>
+    </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="flex justify-center py-12">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+    </div>
+
+    <!-- Models Grid -->
+    <div *ngIf="!isLoading && recentModels.length > 0" 
+         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <div *ngFor="let model of recentModels" 
-           class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-6 border border-gray-100">
-        <div class="flex items-center mb-4">
-          <div [class]="'w-10 h-10 rounded-full flex items-center justify-center mr-3 ' + model.iconColor">
-            <span class="font-bold">{{ model.iconLetter }}</span>
+           class="group relative bg-white rounded-xl border border-gray-200 hover:border-primary-200 hover:shadow-lg transition-all duration-300">
+        <div class="p-6">
+          <!-- Model Icon -->
+          <div class="inline-flex items-center justify-center w-12 h-12 rounded-lg mb-4"
+               [ngClass]="getRandomColor(model.model)">
+            <span class="text-lg font-bold">{{ model.model[0].toUpperCase() }}</span>
           </div>
-          <div>
-            <h3 class="font-semibold text-gray-900">{{ model.name }}</h3>
-            <p class="text-xs text-gray-500">by {{ model.provider }}</p>
+          
+          <!-- Model Info -->
+          <div class="space-y-2">
+            <h3 class="text-lg font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">
+              {{ model.model }}
+            </h3>
+            <div class="flex items-center space-x-2 text-sm text-gray-500">
+              <i class="fas fa-history"></i>
+              <span>{{ model.count }} uses</span>
+            </div>
           </div>
-        </div>
-        <p class="text-sm text-gray-600">{{ model.description }}</p>
-      </div>
 
-      <!-- Placeholder when no recent models -->
-      <div *ngIf="recentModels.length === 0" 
-           class="col-span-3 text-center py-8 rounded-lg">
-        <p class="text-gray-600">No recently used models</p>
+          <!-- Usage Stats -->
+          <div class="mt-4 pt-4 border-t border-gray-100">
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-gray-500">Usage Frequency</span>
+              <div class="flex items-center text-blue-600">
+                <div class="w-24 h-2 rounded-full bg-gray-200 mr-2">
+                  <div class="h-full rounded-full bg-blue-200"
+                       [style.width.%]="(model.count / getTotalUses()) * 100">
+                  </div>
+                </div>
+                <span>{{ ((model.count / getTotalUses()) * 100).toFixed(0) }}%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Link -->
+          <a [routerLink]="['/app/models', model.model]" 
+             class="absolute inset-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
+            <span class="sr-only">View details for {{ model.model }}</span>
+          </a>
+        </div>
       </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && recentModels.length === 0" 
+         class="text-center py-12 px-4">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+        <i class="fas fa-robot text-2xl text-gray-400"></i>
+      </div>
+      <h3 class="text-lg font-medium text-gray-900 mb-2">No Models Used Yet</h3>
+      <p class="text-gray-500 max-w-sm mx-auto mb-6">
+        Start exploring our collection of AI models and begin building amazing applications.
+      </p>
+      <button routerLink="/app/chat" 
+              class="inline-flex items-center px-6 py-3 text-base font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-all">
+        Try Your First Model
+        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+        </svg>
+      </button>
     </div>
   </div>
 
