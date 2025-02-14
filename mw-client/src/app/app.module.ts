@@ -27,6 +27,7 @@ import { VerifyOtpComponent } from './features/auth/verify-otp/verify-otp.compon
 import { ConfirmationPageComponent } from './features/auth/confirmation-page/confirmation-page.component';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { SettingsPageComponent } from './features/settings/settings-page/settings-page.component';
+import { AddModelModalComponent } from './features/dashboard/models-page/add-model-modal/add-model-modal.component';
 
 @NgModule({
   declarations: [
@@ -44,7 +45,8 @@ import { SettingsPageComponent } from './features/settings/settings-page/setting
     ForgotPasswordComponent,
     VerifyOtpComponent,
     ConfirmationPageComponent,
-    SettingsPageComponent
+    SettingsPageComponent,
+    AddModelModalComponent
   ],
   imports: [
     BrowserModule,
@@ -61,7 +63,7 @@ import { SettingsPageComponent } from './features/settings/settings-page/setting
       positionClass: 'toast-top-right',
       preventDuplicates: true,
     }),
-    HttpClientModule,
+    HttpClientModule
   ],
   providers: [
     {

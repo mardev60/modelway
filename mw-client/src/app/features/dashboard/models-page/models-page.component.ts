@@ -14,6 +14,7 @@ export class ModelsPageComponent implements OnInit {
   totalModels: number = 0;
   isAdmin: boolean = false;
   isLoading: boolean = false;
+  showAddModal = false;
 
   constructor(
     private apiService: ApiService,
@@ -77,5 +78,29 @@ export class ModelsPageComponent implements OnInit {
           return 0;
       }
     });
+  }
+
+  openAddModal() {
+    this.showAddModal = true;
+  }
+
+  closeAddModal() {
+    this.showAddModal = false;
+    this.loadModels(); // Refresh the list
+  }
+
+  deleteModel(modelId: string | undefined) {
+    if (!modelId) return;
+    
+    if (confirm('Are you sure you want to delete this model?')) {
+      this.apiService.delete(`/models/${modelId}`).subscribe({
+        next: () => {
+          this.loadModels(); // Refresh the list
+        },
+        error: (error) => {
+          console.error('Error deleting model:', error);
+        }
+      });
+    }
   }
 }

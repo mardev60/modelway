@@ -74,4 +74,12 @@ export class ModelsService {
     const doc = await docRef.get();
     return { id: doc.id, ...doc.data() } as Model;
   }
+
+  async delete(id: string): Promise<void> {
+    await this.firebaseService
+      .getFirestore()
+      .collection(this.modelsCollection)
+      .doc(id)
+      .delete();
+  }
 }

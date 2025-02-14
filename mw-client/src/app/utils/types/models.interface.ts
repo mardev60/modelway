@@ -1,5 +1,5 @@
 export interface Model {
-  id?: string;
+  id: string;
   name: string;
   src_model: string;
   baseURL: string;
