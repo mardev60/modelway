@@ -2,6 +2,7 @@ import { Controller, Post, Body, UseGuards } from '@nestjs/common';
 import { AppService } from './app.service';
 import { ApiTokenGuard } from './guards/api-token.guard';
 import { AuthGuard } from './guards/auth.guard';
+import { User } from './decorators/user.decorator';
 
 @Controller('v1')
 export class AppController {
@@ -9,7 +10,7 @@ export class AppController {
 
   @Post('chat/completions')
   @UseGuards(ApiTokenGuard)
-  async chatCompletions(@Body() body: any) {
+  async chatCompletions(@Body() body: any, @User() user: any) {
     const { messages, model } = body;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
@@ -33,6 +34,11 @@ export class AppController {
       .map((msg) => msg.content)
       .join('\n');
 
-    return this.appService.callApi({ model, systemPrompt, userPrompt });
+    return this.appService.callApi({ 
+      model, 
+      systemPrompt, 
+      userPrompt,
+      userId: user.uid 
+    });
   }
 }

@@ -74,4 +74,25 @@ export class ModelsService {
     const doc = await docRef.get();
     return { id: doc.id, ...doc.data() } as Model;
   }
+
+  async delete(id: string): Promise<void> {
+    await this.firebaseService
+      .getFirestore()
+      .collection(this.modelsCollection)
+      .doc(id)
+      .delete();
+  }
+
+  async findByName(name: string): Promise<Model[]> {
+    const snapshot = await this.firebaseService
+      .getFirestore()
+      .collection(this.modelsCollection)
+      .where('name', '==', name)
+      .get();
+
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Model[];
+  }
 }

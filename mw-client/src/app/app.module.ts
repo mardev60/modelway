@@ -27,6 +27,11 @@ import { VerifyOtpComponent } from './features/auth/verify-otp/verify-otp.compon
 import { ConfirmationPageComponent } from './features/auth/confirmation-page/confirmation-page.component';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { SettingsPageComponent } from './features/settings/settings-page/settings-page.component';
+import { AddModelModalComponent } from './features/dashboard/models-page/add-model-modal/add-model-modal.component';
+import { AddProviderModalComponent } from './features/dashboard/providers-page/add-provider-modal/add-provider-modal.component';
+import { ModelProfileComponent } from './features/dashboard/models-page/model-profile/model-profile.component';
+import { HistoryPageComponent } from './features/dashboard/history-page/history-page.component';
+import { LandingPageComponent } from './features/landing/landing-page/landing-page.component';
 
 @NgModule({
   declarations: [
@@ -44,7 +49,12 @@ import { SettingsPageComponent } from './features/settings/settings-page/setting
     ForgotPasswordComponent,
     VerifyOtpComponent,
     ConfirmationPageComponent,
-    SettingsPageComponent
+    SettingsPageComponent,
+    AddModelModalComponent,
+    AddProviderModalComponent,
+    ModelProfileComponent,
+    HistoryPageComponent,
+    LandingPageComponent
   ],
   imports: [
     BrowserModule,
@@ -61,7 +71,7 @@ import { SettingsPageComponent } from './features/settings/settings-page/setting
       positionClass: 'toast-top-right',
       preventDuplicates: true,
     }),
-    HttpClientModule,
+    HttpClientModule
   ],
   providers: [
     {

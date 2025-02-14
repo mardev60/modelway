@@ -1,0 +1,132 @@
+<div class="max-w-7xl mx-auto p-6">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="flex justify-center items-center py-20">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+  </div>
+
+  <div *ngIf="!isLoading && modelName">
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center gap-4 mb-4">
+        <button 
+          routerLink="/app/models"
+          class="text-gray-600 hover:text-gray-800"
+        >
+          ← Back
+        </button>
+        <h1 class="text-2xl font-bold">{{ modelName }}</h1>
+      </div>
+
+      <!-- Tabs -->
+      <div class="border-b border-gray-200">
+        <nav class="flex gap-8">
+          <button 
+            [class.border-primary-500]="activeTab === 'overview'"
+            [class.border-transparent]="activeTab !== 'overview'"
+            (click)="switchTab('overview')"
+            class="py-4 px-1 border-b-2 font-medium hover:text-gray-800 transition-colors"
+          >
+            Overview
+          </button>
+          <button 
+            [class.border-primary-500]="activeTab === 'api'"
+            [class.border-transparent]="activeTab !== 'api'"
+            (click)="switchTab('api')"
+            class="py-4 px-1 border-b-2 font-medium hover:text-gray-800 transition-colors"
+          >
+            API
+          </button>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Overview Tab Content -->
+    <div *ngIf="activeTab === 'overview'" class="space-y-6">
+      <div class="bg-white rounded-lg shadow">
+        <table class="min-w-full">
+          <thead>
+            <tr class="bg-gray-50">
+              <th class="text-left py-3 px-4">Provider</th>
+              <th class="text-left py-3 px-4">Latency</th>
+              <th class="text-left py-3 px-4">Last Ping</th>
+              <th class="text-left py-3 px-4">Price /1M tokens</th>
+              <th class="text-left py-3 px-4">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let model of models" class="border-t border-gray-200">
+              <td class="py-3 px-4 font-medium">{{ model.providerName }}</td>
+              <td class="py-3 px-4">{{ model.latency }}ms</td>
+              <td class="py-3 px-4">
+                <span [class.text-red-600]="isOld(model.formattedLastPing)">
+                  {{ model.formattedLastPing | date:'medium' }}
+                </span>
+              </td>
+              <td class="py-3 px-4">
+                <div class="flex flex-col">
+                  <span class="text-sm text-gray-600">Input: {{ model.input_price }}€</span>
+                  <span class="text-sm text-gray-600">Output: {{ model.output_price }}€</span>
+                </div>
+              </td>
+              <td class="py-3 px-4">
+                <span 
+                  [class]="getStatusColor(model.latency).text + ' ' + getStatusColor(model.latency).bg"
+                  class="px-2 py-1 rounded-full text-sm"
+                >
+                  {{ getStatus(model.latency) }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- API Tab Content -->
+    <div *ngIf="activeTab === 'api'" class="space-y-6">
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold mb-4">API Reference</h2>
+        
+        <div class="space-y-4">
+          <div>
+            <h3 class="font-medium mb-2">Endpoint</h3>
+            <div class="bg-gray-50 p-3 rounded font-mono text-sm">
+              POST https://api.modelway.com/v1/chat/completions
+            </div>
+          </div>
+
+          <div>
+            <h3 class="font-medium mb-2">Request Body</h3>
+            <div class="bg-gray-50 p-3 rounded font-mono text-sm">
+              {{ '{' }}<br>
+              &nbsp;&nbsp;"model": "{{ modelName }}",<br>
+              &nbsp;&nbsp;"messages": [<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;{{ '{' }}"role": "system", "content": "You are a helpful assistant"{{ '}' }},<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;{{ '{' }}"role": "user", "content": "Hello!"{{ '}' }}<br>
+              &nbsp;&nbsp;]<br>
+              {{ '}' }}
+            </div>
+          </div>
+
+          <div>
+            <h3 class="font-medium mb-2">Example Response</h3>
+            <div class="bg-gray-50 p-3 rounded font-mono text-sm">
+              {{ '{' }}<br>
+              &nbsp;&nbsp;"id": "cmpl-123",<br>
+              &nbsp;&nbsp;"object": "chat.completion",<br>
+              &nbsp;&nbsp;"created": 1677652288,<br>
+              &nbsp;&nbsp;"choices": [{{ '{' }}<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;"index": 0,<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;"message": {{ '{' }}<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"role": "assistant",<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"content": "Hello! How can I assist you today?"<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;{{ '}' }}<br>
+              &nbsp;&nbsp;{{ '}' }}]<br>
+              {{ '}' }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 

@@ -8,6 +8,7 @@ import { ProvidersModule } from './providers/providers.module';
 import { UsersModule } from './users/users.module';
 import { FirebaseService } from './services/firebase.service';
 import { ApiTokenModule } from './api-tokens/api-token.module';
+import { HistoryModule } from './history/history.module';
 
 @Module({
   imports: [
@@ -16,7 +17,8 @@ import { ApiTokenModule } from './api-tokens/api-token.module';
     ProvidersModule,
     PingModule,
     UsersModule,
-    ApiTokenModule
+    ApiTokenModule,
+    HistoryModule
   ],
   controllers: [AppController],
   providers: [AppService, FirebaseService],
