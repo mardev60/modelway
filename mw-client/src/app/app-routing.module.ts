@@ -8,8 +8,13 @@ import { authRoutes } from './features/auth/auth.routes';
 import { AngularFireAuth } from '@angular/fire/compat/auth';
 import { Inject, inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { LandingPageComponent } from './features/landing/landing-page/landing-page.component';
 
 const routes: Routes = [
+  {
+    path: '',
+    component: LandingPageComponent
+  },
   {
     path: 'auth',
     component: AuthLayoutComponent,

@@ -31,6 +31,7 @@ import { AddModelModalComponent } from './features/dashboard/models-page/add-mod
 import { AddProviderModalComponent } from './features/dashboard/providers-page/add-provider-modal/add-provider-modal.component';
 import { ModelProfileComponent } from './features/dashboard/models-page/model-profile/model-profile.component';
 import { HistoryPageComponent } from './features/dashboard/history-page/history-page.component';
+import { LandingPageComponent } from './features/landing/landing-page/landing-page.component';
 
 @NgModule({
   declarations: [
@@ -52,7 +53,8 @@ import { HistoryPageComponent } from './features/dashboard/history-page/history-
     AddModelModalComponent,
     AddProviderModalComponent,
     ModelProfileComponent,
-    HistoryPageComponent
+    HistoryPageComponent,
+    LandingPageComponent
   ],
   imports: [
     BrowserModule,
