@@ -1,5 +1,5 @@
 export interface Provider {
-  _id?: string;
+  id?: string;
   name: string;
   url: string;
 }

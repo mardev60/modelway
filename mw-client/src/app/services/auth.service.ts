@@ -4,23 +4,54 @@ import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import firebase from 'firebase/compat/app';
 import { ApiService } from './api.service';
+import { BehaviorSubject } from 'rxjs';
+import { User } from '../utils/types/users.interface';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
+  private currentUser = new BehaviorSubject<User | null>(null);
+  currentUser$ = this.currentUser.asObservable();
+
   constructor(
     private afAuth: AngularFireAuth, 
     private router: Router,
     private toastr: ToastrService,
     private apiService: ApiService
-  ) {}
+  ) {
+    // Subscribe to Firebase auth state changes
+    this.afAuth.authState.subscribe(async (firebaseUser) => {
+      if (firebaseUser) {
+        // User is signed in
+        const token = await firebaseUser.getIdToken();
+        this.apiService.setAuthToken(token);
+        await this.updateUserInfo();
+      } else {
+        // User is signed out
+        this.apiService.removeAuthToken();
+        this.currentUser.next(null);
+      }
+    });
+  }
 
   async signUp(email: string, password: string) {
     try {
       const userCredential = await this.afAuth.createUserWithEmailAndPassword(email, password);
       if (userCredential.user) {
-        await userCredential.user.sendEmailVerification();
+        // Get the Firebase token
+        const token = await userCredential.user.getIdToken();
+        
+        if (token) {
+          // Set the token in the API service
+          this.apiService.setAuthToken(token);
+          
+          // This will trigger user creation in our backend
+          await this.apiService.getUserInfo().toPromise();
+          
+          // Send email verification
+          await userCredential.user.sendEmailVerification();
+        }
       }
       this.toastr.success('Account created successfully');
       this.router.navigate(['/auth/login']);
@@ -36,6 +67,7 @@ export class AuthService {
       
       if (token) {
         this.apiService.setAuthToken(token);
+        await this.updateUserInfo();
         this.toastr.success('Login successful');
         this.router.navigate(['/app/dashboard']);
       }
@@ -47,9 +79,15 @@ export class AuthService {
   async signInWithGoogle() {
     try {
       const provider = new firebase.auth.GoogleAuthProvider();
-      await this.afAuth.signInWithPopup(provider);
-      this.toastr.success('Google login successful');
-      this.router.navigate(['/app/dashboard']);
+      const userCredential = await this.afAuth.signInWithPopup(provider);
+      const token = await userCredential.user?.getIdToken();
+      
+      if (token) {
+        this.apiService.setAuthToken(token);
+        await this.updateUserInfo();
+        this.toastr.success('Google login successful');
+        this.router.navigate(['/app/dashboard']);
+      }
     } catch (error: any) {
       this.handleAuthError(error);
     }
@@ -58,6 +96,7 @@ export class AuthService {
   async signOut() {
     try {
       await this.afAuth.signOut();
+      this.currentUser.next(null);
       this.apiService.removeAuthToken();
       this.toastr.success('Logout successful');
       this.router.navigate(['/auth/login']);
@@ -77,17 +116,6 @@ export class AuthService {
     }
   }
 
-  async verifyOtpAndResetPassword(email: string, otp: string, newPassword: string) {
-    try {
-      // Implement your OTP verification logic here
-      // This is just a placeholder
-      this.toastr.success('Password reset successful');
-      this.router.navigate(['/auth/login']);
-    } catch (error: any) {
-      this.handleAuthError(error);
-    }
-  }
-
   async verifyPasswordResetCode(code: string): Promise<string> {
     try {
       return await this.afAuth.verifyPasswordResetCode(code);
@@ -104,6 +132,17 @@ export class AuthService {
       this.router.navigate(['/auth/login']);
     } catch (error: any) {
       this.handleAuthError(error);
+    }
+  }
+
+  async updateUserInfo() {
+    try {
+      const userInfo = await this.apiService.getUserInfo().toPromise();
+      this.currentUser.next(userInfo);
+      return userInfo;
+    } catch (error) {
+      console.error('Error updating user info:', error);
+      return null;
     }
   }
 

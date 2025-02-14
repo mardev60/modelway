@@ -58,4 +58,8 @@ export class ApiService {
   removeAuthToken(): void {
     document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
   }
+
+  getUserInfo(): Observable<any> {
+    return this.get<any>('/users/me');
+  }
 } 

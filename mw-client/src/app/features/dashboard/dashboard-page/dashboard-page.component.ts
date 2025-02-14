@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ApiService } from '../../../services/api.service';
+import { AuthService } from '../../../services/auth.service';
 
 interface Model {
   id: string;
@@ -18,24 +19,20 @@ interface Model {
 })
 export class DashboardPageComponent implements OnInit {
   credits: number = 0;
-  recentModels: Model[] = [{id: '1', name: 'DeepSeek Chat', description: 'Lorem ipsum dolor sit amet, consectetur adipiscing', provider: 'deepseek', lastUsed: new Date(), iconLetter: 'D', iconColor: 'bg-blue-100 text-blue-600'}];
+  recentModels: Model[] = [];
   
-  constructor(private apiService: ApiService) {}
+  constructor(
+    private apiService: ApiService,
+    private authService: AuthService
+  ) {}
 
   ngOnInit() {
-    this.loadCredits();
-    this.loadRecentModels();
-  }
-
-  private loadCredits() {
-    this.apiService.get<{ balance: number }>('/credits/balance').subscribe({
-      next: (response) => {
-        this.credits = response.balance;
-      },
-      error: (error) => {
-        console.error('Error loading credits:', error);
+    this.authService.currentUser$.subscribe(user => {
+      if (user) {
+        this.credits = user.credits || 0;
       }
     });
+    this.loadRecentModels();
   }
 
   private loadRecentModels() {

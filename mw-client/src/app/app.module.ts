@@ -26,6 +26,7 @@ import { ForgotPasswordComponent } from './features/auth/forgot-password/forgot-
 import { VerifyOtpComponent } from './features/auth/verify-otp/verify-otp.component';
 import { ConfirmationPageComponent } from './features/auth/confirmation-page/confirmation-page.component';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
+import { SettingsPageComponent } from './features/settings/settings-page/settings-page.component';
 
 @NgModule({
   declarations: [
@@ -42,7 +43,8 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
     MainLayoutComponent,
     ForgotPasswordComponent,
     VerifyOtpComponent,
-    ConfirmationPageComponent
+    ConfirmationPageComponent,
+    SettingsPageComponent
   ],
   imports: [
     BrowserModule,

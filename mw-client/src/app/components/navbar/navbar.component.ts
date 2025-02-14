@@ -1,16 +1,18 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { User } from '../../utils/types/users.interface';
 
 @Component({
   selector: 'app-navbar',
   standalone: false,
   templateUrl: './navbar.component.html',
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit {
   menuOpen = false;
   userProfileImg =
     'https://img.myloview.fr/images/funny-cartoon-monster-face-vector-monster-square-avatar-700-196215185.jpg';
+  currentUser: User | null = null;
 
   navLinks = [
     { path: '/app/dashboard', label: 'Dashboard' },
@@ -21,7 +23,7 @@ export class NavbarComponent {
   ];
 
   userMenuItems = [
-    { label: '⚙️ Settings', path: '/profile', action: () => this.closeMenu() },
+    { label: '⚙️ Settings', path: '/app/settings', action: () => this.closeMenu() },
     { label: '💳 Billing', path: '/billing', action: () => this.closeMenu() },
     { label: '📜 History', path: '/history', action: () => this.closeMenu() },
     { label: '🚪 Logout', path: '', action: () => this.logout() },
@@ -31,6 +33,15 @@ export class NavbarComponent {
     private router: Router,
     private authService: AuthService
   ) {}
+
+  ngOnInit() {
+    this.authService.currentUser$.subscribe(user => {
+      this.currentUser = user;
+      if (user?.photoURL) {
+        this.userProfileImg = user.photoURL;
+      }
+    });
+  }
 
   toggleMenu() {
     this.menuOpen = !this.menuOpen;
