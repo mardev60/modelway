@@ -1,35 +1,49 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Provider as ProviderDocument } from '../utils/schemas/providers.schema';
-import { Model as ModelDocument } from '../utils/schemas/models.schema';
+import { FirebaseService } from '../services/firebase.service';
+import { Provider } from '../utils/types/providers.interface';
+import { Model } from '../utils/types/models.interface';
 
 @Injectable()
 export class ProvidersService {
-  constructor(
-    @InjectModel(ProviderDocument.name)
-    private readonly providerModel: Model<ProviderDocument>,
-    @InjectModel(ModelDocument.name)
-    private readonly modelModel: Model<ModelDocument>,
-  ) {}
+  private readonly providersCollection = 'providers';
+  private readonly modelsCollection = 'models';
 
-  async findAll(): Promise<ProviderDocument[]> {
-    return this.providerModel.find().exec();
+  constructor(private readonly firebaseService: FirebaseService) {}
 
+  async findAll(): Promise<Provider[]> {
+    const snapshot = await this.firebaseService.getFirestore()
+      .collection(this.providersCollection)
+      .get();
+
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Provider[];
   }
 
   async getModelsGroupedByProvider() {
-    const models = await this.modelModel.find().lean();
-    const providers = await this.providerModel.find().lean();
+    const [modelsSnapshot, providersSnapshot] = await Promise.all([
+      this.firebaseService.getFirestore().collection(this.modelsCollection).get(),
+      this.firebaseService.getFirestore().collection(this.providersCollection).get()
+    ]);
+
+    const models = modelsSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Model[];
+
+    const providers = providersSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Provider[];
 
     const grouped = {};
     providers.forEach((provider) => {
       grouped[provider.name] = models
-        .filter((model) => model.provider_id === provider._id.toString())
+        .filter((model) => model.provider_id === provider.id)
         .map((model) => model);
     });
 
     return grouped;
   }
-  
 }

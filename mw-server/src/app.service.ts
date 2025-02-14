@@ -1,9 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import OpenAI from 'openai';
-import { Model as ModelDocument } from './utils/schemas/models.schema';
-import { Provider as ProviderDocument } from './utils/schemas/providers.schema';
+import { FirebaseService } from './services/firebase.service';
+import { Model } from './utils/types/models.interface';
+import { Provider } from './utils/types/providers.interface';
 
 type ChatMessage = {
   role: 'system' | 'user' | 'assistant';
@@ -22,15 +21,12 @@ interface APICallOptions {
 @Injectable()
 export class AppService {
   private openAI: OpenAI;
-  private allProviders: ProviderDocument[] = [];
+  private allProviders: Provider[] = [];
   private readonly logger = new Logger(AppService.name);
+  private readonly modelsCollection = 'models';
+  private readonly providersCollection = 'providers';
 
-  constructor(
-    @InjectModel(ModelDocument.name)
-    private readonly modelModel: Model<ModelDocument>,
-    @InjectModel(ProviderDocument.name)
-    private readonly providerModel: Model<ProviderDocument>,
-  ) {}
+  constructor(private readonly firebaseService: FirebaseService) {}
 
   async callApi({
     model,
@@ -40,35 +36,54 @@ export class AppService {
     maxRetries = 4,
     retryDelay = 500,
   }: APICallOptions): Promise<OpenAI.Chat.Completions.ChatCompletion> {
-
     this.logger.log(`Calling API for model ${model} (classement ${classment})`);
 
     if (!this.allProviders.length) {
-      this.allProviders = await this.providerModel.find().lean().exec();
+      const providersSnapshot = await this.firebaseService.getFirestore()
+        .collection(this.providersCollection)
+        .get();
+      
+      this.allProviders = providersSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Provider[];
     }
 
-    // on stocke le nombre de providers pour le modèle en question
-    const providersCount = await this.modelModel.countDocuments({ name: model }).exec();
+    // Count providers for the model
+    const modelsSnapshot = await this.firebaseService.getFirestore()
+      .collection(this.modelsCollection)
+      .where('name', '==', model)
+      .get();
+    
+    const providersCount = modelsSnapshot.size;
 
     if (classment > providersCount) {
-      throw new Error(
-        `All providers for model ${model} have failed`,
-      );
+      throw new Error(`All providers for model ${model} have failed`);
     }
 
-    // on recupère le provider pour le modèle et le classment en question
-    const provider = await this.modelModel.findOne({ name: model, classment: classment }).lean().exec();
+    // Get provider for the model and classment
+    const providerSnapshot = await this.firebaseService.getFirestore()
+      .collection(this.modelsCollection)
+      .where('name', '==', model)
+      .where('classment', '==', classment)
+      .get();
 
-    if (!provider) {
+    if (providerSnapshot.empty) {
       throw new Error(
         `No provider found for model ${model} with classment ${classment}`,
       );
     }
 
-    // on crée les messages à envoyer à l'API
-    const messages: ChatMessage[] = [ { role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }];
+    const provider = {
+      id: providerSnapshot.docs[0].id,
+      ...providerSnapshot.docs[0].data()
+    } as Model;
 
-    // on appelle l'API
+    const messages: ChatMessage[] = [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt }
+    ];
+
     for (let retry = 0; retry < maxRetries; retry++) {
       try {
         this.openAI = await this.initializeOpenAI(
@@ -79,18 +94,18 @@ export class AppService {
         return await this.openAI.chat.completions.create({
           model: provider.src_model,
           messages,
-          max_tokens: 1, // a modifier par la suite, mais pour les tests c ok
+          max_tokens: 1,
         });
       } catch (error) {
-        this.logger.error( `Provider ${this.getProviderName(provider.provider_id)} for ${provider.name} (classment ${classment}, retry ${retry + 1}/${maxRetries})` )
+        this.logger.error(
+          `Provider ${this.getProviderName(provider.provider_id)} for ${provider.name} (classment ${classment}, retry ${retry + 1}/${maxRetries})`
+        );
 
-        // si une erreur est survenue, on attend un peu avant de réessayer
         if (retry < maxRetries - 1) {
           await this.delay(retryDelay);
           continue;
         }
 
-        // si toutes les tentatives ont échoué, essayer le provider suivant
         return this.callApi({
           model,
           systemPrompt,
@@ -105,10 +120,7 @@ export class AppService {
     throw new Error('Unexpected end of execution');
   }
 
-  private async initializeOpenAI(
-    baseURL: string,
-    providerId: string,
-  ): Promise<OpenAI> {
+  private async initializeOpenAI(baseURL: string, providerId: string): Promise<OpenAI> {
     return new OpenAI({
       baseURL,
       apiKey: this.getApiKey(providerId),
@@ -131,9 +143,7 @@ export class AppService {
   }
 
   private getProviderName(id: string): string {
-    const provider = this.allProviders.find(
-      (provider) => provider._id.toString() === id.toString(),
-    );
+    const provider = this.allProviders.find((provider) => provider.id === id);
 
     if (!provider) {
       throw new Error(`Provider with id ${id} not found`);

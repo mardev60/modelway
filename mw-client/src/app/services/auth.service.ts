@@ -59,9 +59,20 @@ export class AuthService {
   async signInWithGoogle() {
     try {
       const provider = new firebase.auth.GoogleAuthProvider();
-      await this.afAuth.signInWithPopup(provider);
-      this.toastr.success('Google login successful');
-      this.router.navigate(['/app/dashboard']);
+      const userCredential = await this.afAuth.signInWithPopup(provider);
+      // Get the Firebase token
+      const token = await userCredential.user?.getIdToken();
+      
+      if (token) {
+        // Set the token in the API service
+        this.apiService.setAuthToken(token);
+        
+        // This will trigger user creation/sync in our backend
+        await this.apiService.getUserInfo().toPromise();
+        
+        this.toastr.success('Google login successful');
+        this.router.navigate(['/app/dashboard']);
+      }
     } catch (error: any) {
       this.handleAuthError(error);
     }
@@ -86,17 +97,6 @@ export class AuthService {
     } catch (error: any) {
       this.handleAuthError(error);
       return false;
-    }
-  }
-
-  async verifyOtpAndResetPassword(email: string, otp: string, newPassword: string) {
-    try {
-      // Implement your OTP verification logic here
-      // This is just a placeholder
-      this.toastr.success('Password reset successful');
-      this.router.navigate(['/auth/login']);
-    } catch (error: any) {
-      this.handleAuthError(error);
     }
   }
 

@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body } from '@nestjs/common';
 import { ModelsService } from './models.service';
-import { Model } from '../utils/schemas/models.schema';
+import { Model } from '../utils/types/models.interface';
 
 @Controller('models')
 export class ModelsController {
@@ -17,7 +17,7 @@ export class ModelsController {
   }
 
   @Get('groupedbyname')
-  async getModelsByName(@Body('name') name: string) {
+  async getModelsByName(@Body('name') name: string): Promise<Model[]> {
     return this.modelsService.findByGroup(name);
   }
 }

@@ -1,41 +1,51 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { auth } from 'firebase-admin';
-import { User } from '../utils/schemas/users.schema';
+import { FirebaseService } from '../services/firebase.service';
+import { User } from '../utils/types/users.interface';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @InjectModel(User.name)
-    private readonly userModel: Model<User>,
-  ) {}
+  private readonly usersCollection = 'users';
+
+  constructor(private readonly firebaseService: FirebaseService) {}
 
   async getUserInfo(uid: string) {
     try {
-      // First try to get from our database
-      let user = await this.userModel.findOne({ uid }).exec();
-      
-      if (!user) {
-        // If not found in our db, get from Firebase and create in our db
-        const firebaseUser = await auth().getUser(uid);
-        user = await this.createUser({
-          uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          emailVerified: firebaseUser.emailVerified,
-          displayName: firebaseUser.displayName,
-          photoURL: firebaseUser.photoURL,
-        });
+      // First try to get from Firestore
+      const userDoc = await this.firebaseService.getFirestore()
+        .collection(this.usersCollection)
+        .where('uid', '==', uid)
+        .get();
+
+      if (!userDoc.empty) {
+        const userData = userDoc.docs[0];
+        return { id: userData.id, ...userData.data() } as User;
       }
 
-      return user;
+      // If not found, get from Firebase Auth and create in Firestore
+      const firebaseUser = await this.firebaseService.getAuth().getUser(uid);
+      return this.createUser({
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        emailVerified: firebaseUser.emailVerified,
+        displayName: firebaseUser.displayName,
+        photoURL: firebaseUser.photoURL,
+        credits: 0,
+      });
     } catch (error) {
       throw new Error('Error fetching user info');
     }
   }
 
-  async createUser(userData: Partial<User>) {
-    const user = new this.userModel(userData);
-    return user.save();
+  async createUser(userData: Partial<User>): Promise<User> {
+    const docRef = await this.firebaseService.getFirestore()
+      .collection(this.usersCollection)
+      .add({
+        ...userData,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+    const doc = await docRef.get();
+    return { id: doc.id, ...doc.data() } as User;
   }
 } 

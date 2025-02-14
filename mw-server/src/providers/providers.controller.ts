@@ -1,6 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { ProvidersService } from './providers.service';
-import { Provider } from 'src/utils/schemas/providers.schema';
+import { Provider } from '../utils/types/providers.interface';
 
 @Controller('providers')
 export class ProvidersController {

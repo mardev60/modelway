@@ -1,30 +1,32 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import OpenAI from 'openai';
 import { ModelsService } from 'src/models/models.service';
-import { Model as ModelDocument } from 'src/utils/schemas/models.schema';
-import { Provider as ProviderDocument } from 'src/utils/schemas/providers.schema';
-
+import { FirebaseService } from '../services/firebase.service';
 @Injectable()
 export class PingService {
   private readonly logger = new Logger(PingService.name);
   private openAI: OpenAI;
-  private allProviders: any[] = [];
+  private allProviders: any = [];
   private result = [];
+  private readonly providersCollection = 'providers';
 
   constructor(
     private readonly modelService: ModelsService,
-    @InjectModel(ProviderDocument.name)
-    private readonly providerModel: Model<ProviderDocument>,
-    @InjectModel(ModelDocument.name)
-    private readonly modelModel: Model<ModelDocument>,
+    private readonly firebaseService: FirebaseService,
   ) {}
 
   async pingAllProviders() {
     this.logger.log('Starting to ping all providers');
     let allModelsProviders = await this.modelService.findAll();
-    this.allProviders = await this.providerModel.find().exec();
+
+    const db = this.firebaseService.getFirestore();
+    
+    const providersSnapshot = db.collection(this.providersCollection);
+    
+    this.allProviders = await providersSnapshot.get().then((snapshot) => snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data()
+    })));
 
     const allResponses = [];
 
@@ -36,9 +38,20 @@ export class PingService {
           providers.map(async (provider) => {
             this.logger.debug(`Pinging provider at ${provider.baseURL}`);
 
+            const apiKey = this.getApiKey(provider.provider_id);
+            if (!apiKey) {
+                this.logger.warn(`Skipping provider ${provider.baseURL} - No API key found`);
+                allResponses.push({
+                    provider,
+                    responseTime: null,
+                    success: false,
+                });
+                return;
+            }
+
             this.openAI = new OpenAI({
               baseURL: provider.baseURL,
-              apiKey: this.getApiKey(provider.provider_id),
+              apiKey: apiKey,
             });
 
             const start = Date.now();
@@ -113,16 +126,14 @@ export class PingService {
     try {
       await Promise.all(
         updatePromises.map(async (update) => {
-          return this.modelModel.updateOne(
-            { _id: update.id },
-            {
-              $set: {
-                latency: update.responseTime,
-                last_ping: new Date(),
-                classment: update.classment,
-              },
-            },
-          );
+          return this.firebaseService.getFirestore()
+            .collection('models')
+            .doc(update.id)
+            .update({
+              latency: update.responseTime,
+              last_ping: new Date(),
+              classment: update.classment,
+            });
         }),
       );
       this.logger.log('Provider statuses updated successfully');
@@ -169,9 +180,8 @@ export class PingService {
 
   private generateUpdates(providerGroup) {
     const sortedProviders = this.sortProviders(providerGroup.providers);
-
     return sortedProviders.map((provider, index) => ({
-      id: provider.provider._id,
+      id: provider.provider.id,
       responseTime: provider.responseTime,
       classment: index + 1,
     }));
@@ -181,12 +191,21 @@ export class PingService {
     return value > 0 ? 1 / value : 0;
   }
 
-  getApiKey(providerId: string) {
+  private getApiKey(providerId: string) {
     const providerName = this.getProviderName(providerId);
+    if (!providerName) {
+        this.logger.warn(`No provider found with ID: ${providerId}`);
+        return null;
+    }
     return process.env[`${providerName.toUpperCase()}_API_KEY`];
   }
 
-  getProviderName(id: string) {
-    return this.allProviders.find((provider) => provider._id.equals(id)).name;
+  private getProviderName(id: string) {
+    const provider = this.allProviders.find((provider) => provider.id === id);
+    if (!provider) {
+        this.logger.warn(`Provider not found with ID: ${id}`);
+        return null;
+    }
+    return provider.name;
   }
 }
