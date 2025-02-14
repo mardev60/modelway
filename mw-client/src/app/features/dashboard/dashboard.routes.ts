@@ -4,6 +4,7 @@ import { ChatPageComponent } from './chat-page/chat-page.component';
 import { DocsPageComponent } from './documentation-page/docs-page.component';
 import { ModelsPageComponent } from './models-page/models-page.component';
 import { ProvidersPageComponent } from './providers-page/providers-page.component';
+import { SettingsPageComponent } from '../settings/settings-page/settings-page.component';
 
 export const dashboardRoutes: Routes = [
   { path: 'dashboard', component: DashboardPageComponent },
@@ -11,5 +12,6 @@ export const dashboardRoutes: Routes = [
   { path: 'providers', component: ProvidersPageComponent },
   { path: 'chat', component: ChatPageComponent },
   { path: 'docs', component: DocsPageComponent },
+  { path: 'settings', component: SettingsPageComponent },
   { path: '**', redirectTo: 'dashboard' } // Redirection par défaut
 ];

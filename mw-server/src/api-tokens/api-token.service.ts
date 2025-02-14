@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { FirebaseService } from './firebase.service';
+import { FirebaseService } from '../services/firebase.service';
 import { ApiToken } from '../utils/types/api-token.interface';
 import { randomBytes } from 'crypto';
 
@@ -30,6 +30,20 @@ export class ApiTokenService {
     return apiToken;
   }
 
+  async getTokensByUserId(userId: string): Promise<ApiToken[]> {
+    const snapshot = await this.firebaseService
+      .getFirestore()
+      .collection(this.tokensCollection)
+      .where('userId', '==', userId)
+      .where('isActive', '==', true)
+      .get();
+
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as ApiToken));
+  }
+
   async validateToken(token: string): Promise<ApiToken | null> {
     const snapshot = await this.firebaseService
       .getFirestore()
@@ -44,10 +58,10 @@ export class ApiTokenService {
 
     const apiToken = {
       id: snapshot.docs[0].id,
-      ...snapshot.docs[0].data(),
+      ...snapshot.docs[0].data()
     } as ApiToken;
 
-    // Update last used timestamp
+    // Update lastUsedAt
     await this.firebaseService
       .getFirestore()
       .collection(this.tokensCollection)
@@ -57,19 +71,6 @@ export class ApiTokenService {
     return apiToken;
   }
 
-  async getTokensByUserId(userId: string): Promise<ApiToken[]> {
-    const snapshot = await this.firebaseService
-      .getFirestore()
-      .collection(this.tokensCollection)
-      .where('userId', '==', userId)
-      .get();
-
-    return snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as ApiToken[];
-  }
-
   async deactivateToken(tokenId: string, userId: string): Promise<void> {
     const tokenRef = this.firebaseService
       .getFirestore()
@@ -77,7 +78,7 @@ export class ApiTokenService {
       .doc(tokenId);
 
     const token = await tokenRef.get();
-    if (!token.exists || token.data().userId !== userId) {
+    if (!token.exists || token.data()?.userId !== userId) {
       throw new Error('Token not found or unauthorized');
     }
 

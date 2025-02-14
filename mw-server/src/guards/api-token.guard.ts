@@ -1,5 +1,5 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
-import { ApiTokenService } from '../services/api-token.service';
+import { ApiTokenService } from '../api-tokens/api-token.service';
 import { UsersService } from '../users/users.service';
 
 @Injectable()
@@ -24,10 +24,9 @@ export class ApiTokenGuard implements CanActivate {
       throw new UnauthorizedException('Invalid API token');
     }
 
-    // Check user credits
     const user = await this.usersService.findById(apiToken.userId);
-    if (!user || user.credits <= 0) {
-      throw new UnauthorizedException('Insufficient credits');
+    if (!user) {
+      throw new UnauthorizedException('User not found');
     }
 
     // Attach user and token to request

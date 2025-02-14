@@ -7,7 +7,7 @@ import { PingModule } from './ping/ping.module';
 import { ProvidersModule } from './providers/providers.module';
 import { UsersModule } from './users/users.module';
 import { FirebaseService } from './services/firebase.service';
-import { ApiTokenService } from './services/api-token.service';
+import { ApiTokenModule } from './api-tokens/api-token.module';
 
 @Module({
   imports: [
@@ -16,8 +16,9 @@ import { ApiTokenService } from './services/api-token.service';
     ProvidersModule,
     PingModule,
     UsersModule,
+    ApiTokenModule
   ],
   controllers: [AppController],
-  providers: [AppService, FirebaseService, ApiTokenService],
+  providers: [AppService, FirebaseService],
 })
 export class AppModule {}

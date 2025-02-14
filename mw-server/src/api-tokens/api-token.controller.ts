@@ -1,6 +1,6 @@
 import { Controller, Post, Get, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '../guards/auth.guard';
-import { ApiTokenService } from '../services/api-token.service';
+import { ApiTokenService } from './api-token.service';
 import { User } from '../decorators/user.decorator';
 
 @Controller('api-tokens')
