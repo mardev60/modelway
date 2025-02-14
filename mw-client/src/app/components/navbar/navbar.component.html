@@ -12,28 +12,37 @@
     </li>
   </ul>  
 
-  <div class="relative profile-menu">
-    <button (click)="toggleMenu()" class="focus:outline-none relative">
-      <div class="hexagon-container">
-        <div class="hexagon-border hexagon-border-outer"></div>
-        <div class="hexagon-border hexagon-border-inner"></div>
-        <img
-          [src]="userProfileImg"
-          alt="Profile"
-          class="hexagon-avatar"
-        />
-      </div>
-    </button>        
+  <div class="flex items-center gap-4">
+    <div class="relative profile-menu">
+      <button (click)="toggleMenu()" class="focus:outline-none relative">
+        <div class="hexagon-container">
+          <div class="hexagon-border hexagon-border-outer"></div>
+          <div class="hexagon-border hexagon-border-inner"></div>
+          <img
+            [src]="userProfileImg"
+            [alt]="currentUser?.displayName || 'Profile'"
+            class="hexagon-avatar"
+          />
+        </div>
+      </button>        
 
-    <div *ngIf="menuOpen" class="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-lg overflow-hidden z-50">
-      <a
-        *ngFor="let item of userMenuItems"
-        [routerLink]="item.path"
-        class="block px-4 py-2 hover:bg-gray-100 cursor-pointer"
-        (click)="item.action()"
-      >
-        {{ item.label }}
-      </a>
+      <div *ngIf="menuOpen" class="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-lg overflow-hidden z-50">
+        <!-- User info section -->
+        <div class="px-4 py-2 border-b">
+          <div class="font-medium">{{ currentUser?.displayName }}</div>
+          <div class="text-sm text-gray-500">{{ currentUser?.email }}</div>
+        </div>
+
+        <!-- Menu items -->
+        <a
+          *ngFor="let item of userMenuItems"
+          [routerLink]="item.path"
+          class="block px-4 py-2 hover:bg-gray-100 cursor-pointer"
+          (click)="item.action()"
+        >
+          {{ item.label }}
+        </a>
+      </div>
     </div>
   </div>
 </nav>

@@ -4,17 +4,36 @@ import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import firebase from 'firebase/compat/app';
 import { ApiService } from './api.service';
+import { BehaviorSubject } from 'rxjs';
+import { User } from '../utils/types/users.interface';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
+  private currentUser = new BehaviorSubject<User | null>(null);
+  currentUser$ = this.currentUser.asObservable();
+
   constructor(
     private afAuth: AngularFireAuth, 
     private router: Router,
     private toastr: ToastrService,
     private apiService: ApiService
-  ) {}
+  ) {
+    // Subscribe to Firebase auth state changes
+    this.afAuth.authState.subscribe(async (firebaseUser) => {
+      if (firebaseUser) {
+        // User is signed in
+        const token = await firebaseUser.getIdToken();
+        this.apiService.setAuthToken(token);
+        await this.updateUserInfo();
+      } else {
+        // User is signed out
+        this.apiService.removeAuthToken();
+        this.currentUser.next(null);
+      }
+    });
+  }
 
   async signUp(email: string, password: string) {
     try {
@@ -48,6 +67,7 @@ export class AuthService {
       
       if (token) {
         this.apiService.setAuthToken(token);
+        await this.updateUserInfo();
         this.toastr.success('Login successful');
         this.router.navigate(['/app/dashboard']);
       }
@@ -60,16 +80,11 @@ export class AuthService {
     try {
       const provider = new firebase.auth.GoogleAuthProvider();
       const userCredential = await this.afAuth.signInWithPopup(provider);
-      // Get the Firebase token
       const token = await userCredential.user?.getIdToken();
       
       if (token) {
-        // Set the token in the API service
         this.apiService.setAuthToken(token);
-        
-        // This will trigger user creation/sync in our backend
-        await this.apiService.getUserInfo().toPromise();
-        
+        await this.updateUserInfo();
         this.toastr.success('Google login successful');
         this.router.navigate(['/app/dashboard']);
       }
@@ -81,6 +96,7 @@ export class AuthService {
   async signOut() {
     try {
       await this.afAuth.signOut();
+      this.currentUser.next(null);
       this.apiService.removeAuthToken();
       this.toastr.success('Logout successful');
       this.router.navigate(['/auth/login']);
@@ -116,6 +132,17 @@ export class AuthService {
       this.router.navigate(['/auth/login']);
     } catch (error: any) {
       this.handleAuthError(error);
+    }
+  }
+
+  async updateUserInfo() {
+    try {
+      const userInfo = await this.apiService.getUserInfo().toPromise();
+      this.currentUser.next(userInfo);
+      return userInfo;
+    } catch (error) {
+      console.error('Error updating user info:', error);
+      return null;
     }
   }
 
