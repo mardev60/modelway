@@ -46,4 +46,22 @@ export class ProvidersService {
 
     return grouped;
   }
+
+  async create(providerData: Provider): Promise<Provider> {
+    const docRef = await this.firebaseService
+      .getFirestore()
+      .collection(this.providersCollection)
+      .add(providerData);
+
+    const doc = await docRef.get();
+    return { id: doc.id, ...doc.data() } as Provider;
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.firebaseService
+      .getFirestore()
+      .collection(this.providersCollection)
+      .doc(id)
+      .delete();
+  }
 }

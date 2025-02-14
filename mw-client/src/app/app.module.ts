@@ -28,6 +28,7 @@ import { ConfirmationPageComponent } from './features/auth/confirmation-page/con
 import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { SettingsPageComponent } from './features/settings/settings-page/settings-page.component';
 import { AddModelModalComponent } from './features/dashboard/models-page/add-model-modal/add-model-modal.component';
+import { AddProviderModalComponent } from './features/dashboard/providers-page/add-provider-modal/add-provider-modal.component';
 
 @NgModule({
   declarations: [
@@ -46,7 +47,8 @@ import { AddModelModalComponent } from './features/dashboard/models-page/add-mod
     VerifyOtpComponent,
     ConfirmationPageComponent,
     SettingsPageComponent,
-    AddModelModalComponent
+    AddModelModalComponent,
+    AddProviderModalComponent
   ],
   imports: [
     BrowserModule,
