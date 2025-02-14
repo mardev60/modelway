@@ -20,7 +20,19 @@ export class AuthService {
     try {
       const userCredential = await this.afAuth.createUserWithEmailAndPassword(email, password);
       if (userCredential.user) {
-        await userCredential.user.sendEmailVerification();
+        // Get the Firebase token
+        const token = await userCredential.user.getIdToken();
+        
+        if (token) {
+          // Set the token in the API service
+          this.apiService.setAuthToken(token);
+          
+          // This will trigger user creation in our backend
+          await this.apiService.getUserInfo().toPromise();
+          
+          // Send email verification
+          await userCredential.user.sendEmailVerification();
+        }
       }
       this.toastr.success('Account created successfully');
       this.router.navigate(['/auth/login']);
