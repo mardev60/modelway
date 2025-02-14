@@ -1,11 +1,14 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards } from '@nestjs/common';
 import { AppService } from './app.service';
+import { ApiTokenGuard } from './guards/api-token.guard';
+import { AuthGuard } from './guards/auth.guard';
 
 @Controller('v1')
 export class AppController {
   constructor(private appService: AppService) {}
 
   @Post('chat/completions')
+  @UseGuards(ApiTokenGuard)
   async chatCompletions(@Body() body: any) {
     const { messages, model } = body;
 
@@ -21,13 +24,15 @@ export class AppController {
       };
     }
 
-    const validRoles = ['system', 'user', 'assistant'];
+    const systemPrompt = messages
+      .filter((msg) => msg.role === 'system')
+      .map((msg) => msg.content)
+      .join('\n');
+    const userPrompt = messages
+      .filter((msg) => msg.role === 'user')
+      .map((msg) => msg.content)
+      .join('\n');
 
-    const systemPrompt = messages.filter((msg) => msg.role === 'system').map((msg) => msg.content).join('\n');
-    const userPrompt = messages.filter((msg) => msg.role === 'user').map((msg) => msg.content).join('\n');
-
-    const lastUserMessage = messages.reverse().find((msg) => msg.role === 'user')?.content || 'No user message provided.';
-
-    return this.appService.callApi({model, systemPrompt, userPrompt});
+    return this.appService.callApi({ model, systemPrompt, userPrompt });
   }
 }

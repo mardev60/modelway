@@ -48,4 +48,21 @@ export class UsersService {
     const doc = await docRef.get();
     return { id: doc.id, ...doc.data() } as User;
   }
+
+  async findById(userId: string): Promise<User | null> {
+    const userDoc = await this.firebaseService
+      .getFirestore()
+      .collection(this.usersCollection)
+      .doc(userId)
+      .get();
+
+    if (!userDoc.exists) {
+      return null;
+    }
+
+    return {
+      id: userDoc.id,
+      ...userDoc.data(),
+    } as User;
+  }
 } 
