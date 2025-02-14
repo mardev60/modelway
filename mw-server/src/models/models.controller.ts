@@ -19,9 +19,9 @@ export class ModelsController {
     return this.modelsService.create(modelData);
   }
 
-  @Get('groupedbyname')
-  async getModelsByName(@Body('name') name: string): Promise<Model[]> {
-    return this.modelsService.findByGroup(name);
+  @Post('search')
+  async getModelsByName(@Body() data: { name: string }): Promise<Model[]> {
+    return this.modelsService.findByName(data.name);
   }
 
   @Delete(':id')

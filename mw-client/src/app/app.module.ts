@@ -29,6 +29,7 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { SettingsPageComponent } from './features/settings/settings-page/settings-page.component';
 import { AddModelModalComponent } from './features/dashboard/models-page/add-model-modal/add-model-modal.component';
 import { AddProviderModalComponent } from './features/dashboard/providers-page/add-provider-modal/add-provider-modal.component';
+import { ModelProfileComponent } from './features/dashboard/models-page/model-profile/model-profile.component';
 
 @NgModule({
   declarations: [
@@ -48,7 +49,8 @@ import { AddProviderModalComponent } from './features/dashboard/providers-page/a
     ConfirmationPageComponent,
     SettingsPageComponent,
     AddModelModalComponent,
-    AddProviderModalComponent
+    AddProviderModalComponent,
+    ModelProfileComponent
   ],
   imports: [
     BrowserModule,
