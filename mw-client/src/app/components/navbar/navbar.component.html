@@ -1,43 +1,39 @@
-<nav>
+<nav class="flex items-center justify-between">
   <ul class="flex space-x-4">
-    <li>
+    <li *ngFor="let link of navLinks">
       <a
-        routerLink="/dashboard"
-        class="text-primary hover:underline p-2 rounded"
-        >ModelWay</a
+        [routerLink]="link.path"
+        routerLinkActive="font-bold text-primary-dark"
+        [class.text-primary]="!isActive(link.path)"
+        class="hover:underline-none hover:font-medium p-2 rounded transition min-w-[80px] text-center"
       >
-    </li>
-    <li>
-      <a routerLink="/models" class="text-primary hover:underline p-2 rounded"
-        >Models</a
-      >
-    </li>
-    <li>
-      <a
-        routerLink="/providers"
-        class="text-primary hover:underline p-2 rounded"
-        >Providers
+        {{ link.label }}
       </a>
     </li>
-    <li>
-      <a routerLink="/chat" class="text-primary hover:underline p-2 rounded"
-        >Chat</a
+  </ul>  
+
+  <div class="relative profile-menu">
+    <button (click)="toggleMenu()" class="focus:outline-none relative">
+      <div class="hexagon-container">
+        <div class="hexagon-border hexagon-border-outer"></div>
+        <div class="hexagon-border hexagon-border-inner"></div>
+        <img
+          [src]="userProfileImg"
+          alt="Profile"
+          class="hexagon-avatar"
+        />
+      </div>
+    </button>        
+
+    <div *ngIf="menuOpen" class="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-lg overflow-hidden z-50">
+      <a
+        *ngFor="let item of userMenuItems"
+        [routerLink]="item.path"
+        class="block px-4 py-2 hover:bg-gray-100 cursor-pointer"
+        (click)="item.action()"
       >
-    </li>
-    <li>
-      <a routerLink="/docs" class="text-primary hover:underline p-2 rounded"
-        >Docs</a
-      >
-    </li>
-    <li>
-      <a routerLink="/login" class="text-primary hover:underline p-2 rounded"
-        >Login</a
-      >
-    </li>
-    <li>
-      <a routerLink="/register" class="text-primary hover:underline p-2 rounded"
-        >Register</a
-      >
-    </li>
-  </ul>
+        {{ item.label }}
+      </a>
+    </div>
+  </div>
 </nav>
