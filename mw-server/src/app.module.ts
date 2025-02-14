@@ -7,6 +7,7 @@ import { DatabaseModule } from './database/models.module';
 import { ModelsModule } from './models/models.module';
 import { PingModule } from './ping/ping.module';
 import { ProvidersModule } from './providers/providers.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ProvidersModule } from './providers/providers.module';
     ProvidersModule,
     PingModule,
     DatabaseModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

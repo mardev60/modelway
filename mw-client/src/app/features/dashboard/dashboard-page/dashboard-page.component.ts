@@ -39,6 +39,15 @@ export class DashboardPageComponent implements OnInit {
   }
 
   private loadRecentModels() {
+    this.apiService.getUserInfo().subscribe({
+      next: (user) => {
+        console.log(user);
+      },
+      error: (error) => {
+        console.error('Error loading user info:', error);
+      }
+    });
+
     this.apiService.get<Model[]>('/models/recent').subscribe({
       next: (models) => {
         this.recentModels = models.slice(0, 3).map(model => ({
