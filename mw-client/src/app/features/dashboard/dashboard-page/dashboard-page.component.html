@@ -1,1 +1,67 @@
-<p>dashboard-page works!</p>
+<div class="max-w-7xl mx-auto p-6">
+  <!-- Credits section with a card -->
+  <div class="bg-white rounded-lg shadow p-6 mb-8">
+    <div class="flex justify-between items-center">
+      <div>
+        <h2 class="text-gray-600 text-sm font-medium">Available Credits</h2>
+        <div class="text-3xl font-bold text-gray-900 mt-1">${{ credits.toFixed(2) }}</div>
+      </div>
+      <button 
+        class="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-black rounded-lg transition-colors font-medium"
+        routerLink="/credits">
+        Add Credits
+      </button>
+    </div>
+  </div>
+
+  <!-- Main heading -->
+  <h1 class="text-center text-2xl font-bold text-gray-900 mt-12 mb-12">
+    Effortless access to AI models, optimized for you
+  </h1>
+
+  <!-- Recent models section -->
+  <div class="mb-12">
+    <h2 class="text-lg font-bold text-gray-900 mb-6">Recently Used Models</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div *ngFor="let model of recentModels" 
+           class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-6 border border-gray-100">
+        <div class="flex items-center mb-4">
+          <div [class]="'w-10 h-10 rounded-full flex items-center justify-center mr-3 ' + model.iconColor">
+            <span class="font-bold">{{ model.iconLetter }}</span>
+          </div>
+          <div>
+            <h3 class="font-semibold text-gray-900">{{ model.name }}</h3>
+            <p class="text-xs text-gray-500">by {{ model.provider }}</p>
+          </div>
+        </div>
+        <p class="text-sm text-gray-600">{{ model.description }}</p>
+      </div>
+
+      <!-- Placeholder when no recent models -->
+      <div *ngIf="recentModels.length === 0" 
+           class="col-span-3 text-center py-8 rounded-lg">
+        <p class="text-gray-600">No recently used models</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Browse section -->
+  <div class="text-right mb-16">
+    <button 
+      class="px-8 py-3 bg-primary-600 hover:bg-primary-700 text-white bg-gray-600 rounded-md transition-colors font-medium"
+      routerLink="/app/models">
+      Browse Models
+    </button>
+  </div>
+
+  <!-- Info section -->
+  <div class="max-w-4xl mx-auto text-center">
+    <p class="text-gray-600 leading-relaxed">
+      Access cutting-edge AI models through our optimized platform. Our service ensures reliable performance and seamless integration for all your artificial intelligence needs.
+    </p>
+    <p class="mt-3 text-gray-600 leading-relaxed">
+      Start exploring the possibilities with our curated selection of top-performing models, backed by industry leaders and innovative AI companies.
+    </p>
+  </div>
+</div>  
