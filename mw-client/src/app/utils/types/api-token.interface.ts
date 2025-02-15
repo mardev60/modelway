@@ -4,6 +4,6 @@ export interface ApiToken {
   token: string;
   name: string;
   createdAt: Date;
-  lastUsedAt?: Date;
+  lastUsedAt?: Date | null;
   isActive: boolean;
 } 

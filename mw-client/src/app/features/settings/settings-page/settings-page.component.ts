@@ -4,6 +4,11 @@ import { ApiTokenService } from '../../../services/api-token.service';
 import { ApiToken } from '../../../utils/types/api-token.interface';
 import { ToastrService } from 'ngx-toastr';
 
+interface FirestoreTimestamp {
+  _seconds: number;
+  _nanoseconds: number;
+}
+
 @Component({
   selector: 'app-settings-page',
   templateUrl: './settings-page.component.html',
@@ -32,13 +37,23 @@ export class SettingsPageComponent implements OnInit {
   loadTokens() {
     this.apiTokenService.getTokens().subscribe({
       next: (tokens) => {
-        this.tokens = tokens;
+        this.tokens = tokens.map(token => ({
+          ...token,
+          createdAt: this.convertTimestampToDate(token.createdAt),
+          lastUsedAt: token.lastUsedAt ? this.convertTimestampToDate(token.lastUsedAt) : null
+        }));
       },
       error: (error) => {
         this.toastr.error('Failed to load API tokens');
         console.error('Error loading tokens:', error);
       }
     });
+  }
+
+  private convertTimestampToDate(timestamp: FirestoreTimestamp | Date): Date {
+    if (timestamp instanceof Date) return timestamp;
+    if (!timestamp?._seconds) return new Date();
+    return new Date(timestamp._seconds * 1000 + timestamp._nanoseconds / 1000000);
   }
 
   async createToken() {
