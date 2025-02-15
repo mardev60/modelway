@@ -1,1 +1,97 @@
-<p>chat-page works!</p>
+<div
+  class="flex flex-col h-[calc(100vh-130px)] bg-gray-50 rounded-lg shadow-lg overflow-hidden"
+>
+  <!-- En-tête -->
+  <div class="p-4 bg-white border-b">
+    <div class="flex items-center space-x-2">
+      <h1 class="text-xl font-semibold text-gray-800">Chat with</h1>
+      <select
+        [(ngModel)]="selectedModel"
+        (change)="onModelChange()"
+        class="px-3 py-2 border rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="meta-llama/llama-3.3-70B-instruct">
+          Meta Llama 3.3 70B Instruct
+        </option>
+        <option value="deepseek/deepseek-v3">DeepSeek V3</option>
+      </select>
+    </div>
+    <div class="flex gap-4 mt-2 text-sm text-gray-600">
+      <span>Requests: 3/5</span>
+      <span>Tokens: 1024/2048</span>
+    </div>
+  </div>
+
+  <!-- Zone des messages -->
+  <div #messageContainer class="flex-1 p-4 overflow-y-auto">
+    <div
+      *ngFor="let message of messages"
+      class="flex gap-3 mb-4"
+      [ngClass]="{ 'flex-row-reverse': message.role === 'user' }"
+    >
+      <div
+        class="w-8 h-8 rounded-full flex items-center justify-center"
+        [ngClass]="message.role === 'user' ? 'bg-gray-200' : 'bg-blue-500'"
+      >
+        <span
+          [ngClass]="message.role === 'user' ? 'text-gray-600' : 'text-white'"
+          class="text-sm"
+        >
+          {{ message.role === "user" ? "U" : "AI" }}
+        </span>
+      </div>
+      <div class="w-fit max-w-[80%]">
+        <div
+          class="p-3 rounded-lg shadow-sm"
+          [ngClass]="message.role === 'user' ? 'bg-blue-500' : 'bg-white'"
+        >
+          <p
+            [ngClass]="message.role === 'user' ? 'text-white' : 'text-gray-800'"
+          >
+            {{ message.content }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Indicateur de chargement -->
+    <div *ngIf="isLoading" class="flex gap-3 mb-4">
+      <div
+        class="w-8 h-8 rounded-full flex items-center justify-center bg-blue-500"
+      >
+        <span class="text-white text-sm">AI</span>
+      </div>
+      <div class="w-fit max-w-[80%]">
+        <div class="p-3 rounded-lg shadow-sm bg-white">
+          <div class="flex gap-2">
+            <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+            <div
+              class="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:0.2s]"
+            ></div>
+            <div
+              class="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:0.4s]"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Zone de saisie -->
+  <div class="p-4 bg-white border-t">
+    <div class="flex gap-4">
+      <input
+        type="text"
+        [(ngModel)]="messageInput"
+        placeholder="Write your message here..."
+        class="flex-1 p-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      <button
+        (click)="sendMessage()"
+        class="px-6 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+      >
+        Send
+      </button>
+    </div>
+  </div>
+</div>
