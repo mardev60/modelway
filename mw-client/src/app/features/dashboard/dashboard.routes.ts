@@ -7,6 +7,7 @@ import { ProvidersPageComponent } from './providers-page/providers-page.componen
 import { SettingsPageComponent } from '../settings/settings-page/settings-page.component';
 import { ModelProfileComponent } from './models-page/model-profile/model-profile.component';
 import { HistoryPageComponent } from './history-page/history-page.component';
+import { BillingPageComponent } from './billing-page/billing-page.component';
 
 export const dashboardRoutes: Routes = [
   { path: 'dashboard', component: DashboardPageComponent },
@@ -17,5 +18,6 @@ export const dashboardRoutes: Routes = [
   { path: 'docs', component: DocsPageComponent },
   { path: 'settings', component: SettingsPageComponent },
   { path: 'history', component: HistoryPageComponent },
+  { path: 'billing', component: BillingPageComponent },
   { path: '**', redirectTo: 'dashboard' } // Redirection par défaut
 ];

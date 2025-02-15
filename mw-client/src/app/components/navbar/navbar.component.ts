@@ -24,7 +24,7 @@ export class NavbarComponent implements OnInit {
 
   userMenuItems = [
     { label: '⚙️ Settings', path: '/app/settings', action: () => this.closeMenu() },
-    { label: '💳 Billing', path: '/billing', action: () => this.closeMenu() },
+    { label: '💳 Billing', path: '/app/billing', action: () => this.closeMenu() },
     { label: '📜 History', path: '/app/history', action: () => this.closeMenu() },
     { label: '🚪 Logout', path: '', action: () => this.logout() },
   ];  
