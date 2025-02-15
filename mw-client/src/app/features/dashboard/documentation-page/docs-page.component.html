@@ -3,7 +3,7 @@
     <!-- Documentation Header -->
     <div class="mb-8">
       <h1 class="text-3xl font-bold text-gray-900">Documentation</h1>
-      <p class="mt-2 text-gray-600">Learn how to integrate and use ModelWay's API in your applications.</p>
+      <p class="mt-2 text-gray-600">Learn how to integrate ModelWay with your existing OpenAI implementations.</p>
     </div>
 
     <div class="grid grid-cols-12 gap-8">
@@ -16,8 +16,11 @@
           <a href="#authentication" class="block px-3 py-2 text-sm font-medium text-gray-900 rounded-md hover:bg-gray-50">
             Authentication
           </a>
-          <a href="#making-requests" class="block px-3 py-2 text-sm font-medium text-gray-900 rounded-md hover:bg-gray-50">
-            Making Requests
+          <a href="#sdk-integration" class="block px-3 py-2 text-sm font-medium text-gray-900 rounded-md hover:bg-gray-50">
+            SDK Integration
+          </a>
+          <a href="#api-examples" class="block px-3 py-2 text-sm font-medium text-gray-900 rounded-md hover:bg-gray-50">
+            API Examples
           </a>
           <a href="#error-handling" class="block px-3 py-2 text-sm font-medium text-gray-900 rounded-md hover:bg-gray-50">
             Error Handling
@@ -32,31 +35,7 @@
           <h2 class="text-2xl font-bold text-gray-900">Quickstart</h2>
           
           <div class="prose max-w-none">
-            <p>To get started with ModelWay, follow these simple steps:</p>
-            
-            <h3 class="text-lg font-semibold mt-4">1. Install the SDK</h3>
-            <div class="bg-gray-50 rounded-md p-4 my-2">
-              <code class="text-sm text-primary-700">npm install modelway-sdk</code>
-            </div>
-
-            <h3 class="text-lg font-semibold mt-4">2. Initialize the Client</h3>
-            <div class="bg-gray-50 rounded-md p-4 my-2">
-              <pre class="text-sm text-primary-700"><code>import {{ '{' }} ModelWay {{ '}' }} from 'modelway-sdk';
-
-const modelway = new ModelWay({{ '{' }}
-  apiKey: 'your-api-key'
-{{ '}' }});</code></pre>
-            </div>
-
-            <h3 class="text-lg font-semibold mt-4">3. Make Your First Request</h3>
-            <div class="bg-gray-50 rounded-md p-4 my-2">
-              <pre class="text-sm text-primary-700"><code>const response = await modelway.chat.completions.create({{ '{' }}
-  model: "gpt-4",
-  messages: [
-    {{ '{' }} role: "user", content: "Hello!" {{ '}' }}
-  ]
-{{ '}' }});</code></pre>
-            </div>
+            <p>ModelWay is designed to work as a drop-in replacement for OpenAI's API. You can continue using your existing OpenAI SDK implementation by simply changing the base URL.</p>
           </div>
         </section>
 
@@ -84,36 +63,74 @@ const modelway = new ModelWay({{ '{' }}
           </div>
         </section>
 
-        <!-- Making Requests Section -->
-        <section id="making-requests" class="space-y-4">
-          <h2 class="text-2xl font-bold text-gray-900">Making Requests</h2>
+        <!-- SDK Integration Section -->
+        <section id="sdk-integration" class="space-y-4">
+          <h2 class="text-2xl font-bold text-gray-900">SDK Integration</h2>
           
           <div class="prose max-w-none">
-            <p>ModelWay automatically routes your requests to the best performing model instance. Here's how to make different types of requests:</p>
+            <p>You can use the official OpenAI SDK with ModelWay by setting the base URL:</p>
 
-            <h3 class="text-lg font-semibold mt-4">Chat Completions</h3>
+            <h3 class="text-lg font-semibold mt-4">JavaScript/Node.js</h3>
             <div class="bg-gray-50 rounded-md p-4 my-2">
-              <pre class="text-sm text-primary-700"><code>const chatResponse = await modelway.chat.completions.create({{ '{' }}
-  model: "gpt-4",
-  messages: [
-    {{ '{' }} role: "system", content: "You are a helpful assistant." {{ '}' }},
-    {{ '{' }} role: "user", content: "What is ModelWay?" {{ '}' }}
-  ],
-  temperature: 0.7
+              <pre class="text-sm text-primary-700"><code>import OpenAI from 'openai';
+
+const openai = new OpenAI({{ '{' }}
+  apiKey: 'your-modelway-api-key',
+  baseURL: 'https://api.modelway.com/v1'
 {{ '}' }});</code></pre>
             </div>
 
-            <h3 class="text-lg font-semibold mt-4">Streaming Responses</h3>
+            <h3 class="text-lg font-semibold mt-4">Python</h3>
             <div class="bg-gray-50 rounded-md p-4 my-2">
-              <pre class="text-sm text-primary-700"><code>const stream = await modelway.chat.completions.create({{ '{' }}
-  model: "gpt-4",
-  messages: [{{ '{' }} role: "user", content: "Tell me a story" {{ '}' }}],
-  stream: true
-{{ '}' }});
+              <pre class="text-sm text-primary-700"><code>from openai import OpenAI
 
-for await (const chunk of stream) {{ '{' }}
-  console.log(chunk.choices[0]?.delta?.content);
-{{ '}' }}</code></pre>
+client = OpenAI(
+    api_key="your-modelway-api-key",
+    base_url="https://api.modelway.com/v1"
+)</code></pre>
+            </div>
+          </div>
+        </section>
+
+        <!-- API Examples Section -->
+        <section id="api-examples" class="space-y-4">
+          <h2 class="text-2xl font-bold text-gray-900">API Examples</h2>
+          
+          <div class="prose max-w-none">
+            <h3 class="text-lg font-semibold mt-4">JavaScript/Node.js</h3>
+            <div class="bg-gray-50 rounded-md p-4 my-2">
+              <pre class="text-sm text-primary-700"><code>const completion = await openai.chat.completions.create({{ '{' }}
+  model: "openai/gpt-4o",
+  messages: [
+    {{ '{' }} role: "system", content: "You are a helpful assistant." {{ '}' }},
+    {{ '{' }} role: "user", content: "Hello!" {{ '}' }}
+  ]
+{{ '}' }});</code></pre>
+            </div>
+
+            <h3 class="text-lg font-semibold mt-4">Python</h3>
+            <div class="bg-gray-50 rounded-md p-4 my-2">
+              <pre class="text-sm text-primary-700"><code>completion = client.chat.completions.create(
+    model="openai/gpt-4o",
+    messages=[
+        {{ '{' }}"role": "system", "content": "You are a helpful assistant."{{ '}' }},
+        {{ '{' }}"role": "user", "content": "Hello!"{{ '}' }}
+    ]
+)</code></pre>
+            </div>
+
+            <h3 class="text-lg font-semibold mt-4">cURL</h3>
+            <div class="bg-gray-50 rounded-md p-4 my-2">
+              <pre class="text-sm text-primary-700"><code>curl https://api.modelway.com/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-modelway-api-key" \
+  -d '{{ '{' }}
+    "model": "openai/gpt-4o",
+    "messages": [
+      {{ '{' }}"role": "system", "content": "You are a helpful assistant."{{ '}' }},
+      {{ '{' }}"role": "user", "content": "Hello!"{{ '}' }}
+    ]
+  {{ '}' }}'</code></pre>
             </div>
           </div>
         </section>
@@ -127,8 +144,8 @@ for await (const chunk of stream) {{ '{' }}
 
             <div class="bg-gray-50 rounded-md p-4 my-2">
               <pre class="text-sm text-primary-700"><code>try {{ '{' }}
-  const response = await modelway.chat.completions.create({{ '{' }}
-    model: "gpt-4",
+  const response = await openai.chat.completions.create({{ '{' }}
+    model: "openai/gpt-4o",
     messages: [{{ '{' }} role: "user", content: "Hello!" {{ '}' }}]
   {{ '}' }});
 {{ '}' }} catch (error) {{ '{' }}
