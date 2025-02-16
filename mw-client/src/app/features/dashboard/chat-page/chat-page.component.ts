@@ -36,17 +36,12 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
     tokens: { current: 0, max: 0 },
   };
 
-  constructor(private apiService: ApiService) {
-    // Message initial de l'assistant
-    this.messages.push({
-      role: 'assistant',
-      content: "Bonjour! Comment puis-je vous aider aujourd'hui?",
-    });
-  }
+  constructor(private apiService: ApiService) {}
 
   async ngOnInit(): Promise<void> {
     this.loadModels();
     await this.updateQuota(this.selectedModel);
+    this.messages.push(this.getWelcomeMessage()); // Déplacé ici après la vérification du quota
   }
 
   ngAfterViewChecked() {
@@ -60,6 +55,9 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
     } catch (err) {}
   }
 
+  /**
+   * Envoie un message à l'assistant
+   */
   sendMessage(): void {
     if (!this.messageInput.trim() || !this.hasQuota) return;
 
@@ -107,9 +105,13 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
     this.messageInput = '';
   }
 
+  /**
+   * Met à jour le modèle sélectionné et met à jour le quota
+   */
   async onModelChange() {
     this.defaultModel = this.selectedModel;
     await this.updateQuota(this.selectedModel);
+    this.messages = [this.getWelcomeMessage()];
   }
 
   /*
@@ -123,10 +125,13 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
 
   /*
    * Vérifie le quota restant pour un utilisateur pour un modèle
+   * Encode le nom du modèle pour gérer les caractères spéciaux
+   * @param modelName - Le nom du modèle à vérifier
+   * @returns Le quota restant pour le modèle
+   * @throws Erreur si le quota ne peut pas être vérifié
    */
   private async checkQuota(modelName: string): Promise<number> {
     try {
-      // Encoder le nom du modèle pour gérer les caractères spéciaux
       const encodedModelName = encodeURIComponent(modelName);
       const response = await firstValueFrom(
         this.apiService.get<{ remaining: number }>(
@@ -156,5 +161,17 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
         this.isLoadingModels = false;
       },
     });
+  }
+
+  private getWelcomeMessage(): Message {
+    return this.hasQuota
+      ? {
+          role: 'assistant',
+          content: 'Hello! How can I help you today?',
+        }
+      : {
+          role: 'assistant',
+          content: 'Sorry, you have reached your quota limit.',
+        };
   }
 }
