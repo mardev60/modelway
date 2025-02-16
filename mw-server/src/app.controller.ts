@@ -1,13 +1,16 @@
-import { Controller, Post, Body, UseGuards, Res } from '@nestjs/common';
-import { AppService } from './app.service';
-import { ApiTokenGuard } from './guards/api-token.guard';
-import { AuthGuard } from './guards/auth.guard';
-import { User } from './decorators/user.decorator';
+import { Body, Controller, Post, Res, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
+import { AppService } from './app.service';
+import { User } from './decorators/user.decorator';
+import { ApiTokenGuard } from './guards/api-token.guard';
+import { QuotasService } from './quotas/quotas.service';
 
 @Controller('v1')
 export class AppController {
-  constructor(private appService: AppService) {}
+  constructor(
+    private appService: AppService,
+    private quotasService: QuotasService,
+  ) {}
 
   @Post('chat/completions')
   @UseGuards(ApiTokenGuard)
@@ -16,17 +19,25 @@ export class AppController {
     @User() user: any,
     @Res() response: Response,
   ) {
-    const { messages, model, stream = false } = body;
+    // Vérifier les quotas avant de procéder
+    const hasQuota = await this.quotasService.checkUserQuota(
+      user.uid,
+      body.model,
+    );
 
-    if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return response.json({
-        error: { message: 'The "messages" property must be a non-empty array.' },
+    if (!hasQuota) {
+      return response.status(429).json({
+        error: { message: 'Quota dépassé. Veuillez réessayer plus tard.' },
       });
     }
 
-    if (!model || typeof model !== 'string') {
-      return response.json({
-        error: { message: 'The "model" property is required and must be a string.' },
+    await this.quotasService.decrementQuota(user.uid, body.model);
+
+    const { messages, model, stream = false } = body;
+
+    if (!messages || !model) {
+      return response.status(400).json({
+        error: { message: 'Messages and model are required.' },
       });
     }
 

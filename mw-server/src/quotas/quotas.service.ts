@@ -22,7 +22,6 @@ export class QuotasService {
       }
 
       const quotaDoc = snapshot.docs[0].data();
-      console.log('quotaDoc', quotaDoc.quota);
       return quotaDoc.quota;
     } catch (error) {
       console.error('Error in checkUserQuota:', error);
@@ -34,8 +33,8 @@ export class QuotasService {
     const snapshot = await this.firebaseService
       .getFirestore()
       .collection(this.quotasCollection)
-      .where('userId', '==', userId)
-      .where('modelName', '==', modelName)
+      .where('user_id', '==', userId)
+      .where('model_name', '==', modelName)
       .get();
 
     if (!snapshot.empty) {
@@ -43,7 +42,7 @@ export class QuotasService {
       const quota = snapshot.docs[0].data();
 
       await docRef.update({
-        remainingQuota: Math.max(0, quota.remainingQuota - 1),
+        quota: Math.max(0, quota.quota - 1),
       });
     }
   }

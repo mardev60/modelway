@@ -21,7 +21,6 @@ export class QuotasController {
       }
 
       const userId = request.user.user_id;
-      console.log('Checking quota for:', { userId, modelName });
 
       const remaining = await this.quotasService.checkUserQuota(
         userId,

@@ -28,6 +28,7 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
   selectedModel: string = this.defaultModel;
   isLoading: boolean = false;
   models: string[] = [];
+  hasQuota: boolean = true;
 
   // Métriques avec valeurs initiales à 0
   metrics = {
@@ -41,11 +42,11 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
       role: 'assistant',
       content: "Bonjour! Comment puis-je vous aider aujourd'hui?",
     });
-    this.updateQuota(this.defaultModel);
   }
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     this.loadModels();
+    await this.updateQuota(this.selectedModel);
   }
 
   ngAfterViewChecked() {
@@ -60,7 +61,7 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
   }
 
   sendMessage(): void {
-    if (!this.messageInput.trim()) return;
+    if (!this.messageInput.trim() || !this.hasQuota) return;
 
     const userMessage = {
       role: 'user',
@@ -112,9 +113,9 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
     this.messageInput = '';
   }
 
-  onModelChange() {
+  async onModelChange() {
     this.defaultModel = this.selectedModel;
-    this.updateQuota(this.selectedModel);
+    await this.updateQuota(this.selectedModel);
   }
 
   /*
@@ -123,6 +124,7 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
   private async updateQuota(modelName: string): Promise<void> {
     const remainingQuota = await this.checkQuota(modelName);
     this.metrics.requests.current = remainingQuota;
+    this.hasQuota = remainingQuota > 0;
   }
 
   /*

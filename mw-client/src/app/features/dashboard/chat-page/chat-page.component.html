@@ -6,6 +6,7 @@
     <div class="flex items-center space-x-2">
       <h1 class="text-xl font-semibold text-gray-800">Chat with</h1>
       <select
+        [disabled]="isLoading"
         [(ngModel)]="selectedModel"
         (change)="onModelChange()"
         class="px-3 py-2 border rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -15,12 +16,26 @@
         </option>
       </select>
     </div>
-    <div class="flex gap-4 mt-2 text-sm text-gray-600">
-      <span
-        >Requests:
-        <span class="font-bold">{{ metrics.requests.current }}/5</span></span
+    <div class="flex space-x-4 mt-4 text-sm text-gray-600 font-bold">
+      <span>
+        Requests:
+        <span
+          class="text-white px-2 py-1 rounded"
+          [ngClass]="{
+            'bg-red-400': !hasQuota,
+            'bg-green-500': hasQuota
+          }"
+        >
+          {{ metrics.requests.current }}/5
+        </span>
+      </span>
+
+      <span>
+        Tokens:
+        <span class="text-white px-2 py-1 rounded bg-gray-400"
+          >1024 &rarr; 2048</span
+        ></span
       >
-      <span>Tokens: <span class="font-bold">1024 &rarr; 2048</span></span>
     </div>
   </div>
 
@@ -47,11 +62,11 @@
           class="p-3 rounded-lg shadow-sm"
           [ngClass]="message.role === 'user' ? 'bg-blue-500' : 'bg-white'"
         >
-          <p
+          <disablp
             [ngClass]="message.role === 'user' ? 'text-white' : 'text-gray-800'"
           >
             {{ message.content }}
-          </p>
+          </disablp>
         </div>
       </div>
     </div>
@@ -79,18 +94,32 @@
     </div>
   </div>
 
+  <!-- Alerte quota -->
+  <div *ngIf="!hasQuota" class="p-4 bg-red-100 border-t border-red-200">
+    <p class="text-red-700 text-center">
+      You have reached your message limit for this model.
+    </p>
+  </div>
+
   <!-- Zone de saisie -->
   <div class="p-4 bg-white border-t">
     <div class="flex gap-4">
       <input
+        [disabled]="!hasQuota || isLoading"
         type="text"
         [(ngModel)]="messageInput"
+        (keyup.enter)="sendMessage()"
         placeholder="Write your message here..."
         class="flex-1 p-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
       <button
+        [disabled]="!hasQuota || isLoading"
         (click)="sendMessage()"
-        class="px-6 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+        class="px-6 text-white rounded-lg transition-colors"
+        [ngClass]="{
+          'bg-blue-500 hover:bg-blue-600': hasQuota && !isLoading,
+          'bg-gray-400': !hasQuota || isLoading
+        }"
       >
         Send
       </button>
