@@ -10,6 +10,19 @@ export class PingService {
   private result = [];
   private readonly providersCollection = 'providers';
 
+  private readonly SCORE_WEIGHTS = {
+    latency: parseFloat(process.env.WEIGHT_LATENCY) || 0.4,
+    inputCost: parseFloat(process.env.WEIGHT_INPUT_COST) || 0.2,
+    outputCost: parseFloat(process.env.WEIGHT_OUTPUT_COST) || 0.2,
+    reliability: parseFloat(process.env.WEIGHT_RELIABILITY) || 0.1,
+    availability: parseFloat(process.env.WEIGHT_AVAILABILITY) || 0.1,
+  };
+
+  private readonly SCORE_THRESHOLDS = {
+    maxLatency: parseFloat(process.env.MAX_LATENCY) || 5000, // 5 seconds
+    minSuccessRate: parseFloat(process.env.MIN_SUCCESS_RATE) || 0.8,
+  };
+
   constructor(
     private readonly modelService: ModelsService,
     private readonly firebaseService: FirebaseService,
@@ -145,50 +158,84 @@ export class PingService {
   private calculateScore(provider, bestLatency) {
     if (!provider || provider.responseTime === null) return -Infinity;
 
-    const weightLatency = 0.6;
-    const weightInputCost = 0.15;
-    const weightOutputCost = 0.25;
+    // Check if provider meets minimum requirements
+    if (provider.responseTime > this.SCORE_THRESHOLDS.maxLatency) return -Infinity;
+    if (provider.successRate < this.SCORE_THRESHOLDS.minSuccessRate) return -Infinity;
 
-    const latencyRatio = bestLatency / provider.responseTime;
-    const normalizedLatency = Math.log(latencyRatio + 1);
+    // Normalize values
+    const latencyScore = this.normalizeLatency(provider.responseTime, bestLatency);
+    const inputCostScore = this.normalizeCost(provider?.provider?.input_price);
+    const outputCostScore = this.normalizeCost(provider?.provider?.output_price);
+    const reliabilityScore = provider.successRate || 1;
+    const availabilityScore = provider.availability || 1;
 
-    const penalty =
-      provider.responseTime > 2000
-        ? Math.exp((provider.responseTime - 2000) / 1000) * 0.1
-        : 1;
-
+    // Calculate weighted score
     return (
-      weightLatency * normalizedLatency * penalty +
-      weightInputCost * (1 - this.normalize(provider?.provider?.input_price)) +
-      weightOutputCost * (1 - this.normalize(provider?.provider?.output_price))
+      this.SCORE_WEIGHTS.latency * latencyScore +
+      this.SCORE_WEIGHTS.inputCost * inputCostScore +
+      this.SCORE_WEIGHTS.outputCost * outputCostScore +
+      this.SCORE_WEIGHTS.reliability * reliabilityScore +
+      this.SCORE_WEIGHTS.availability * availabilityScore
     );
   }
 
+  private normalizeLatency(responseTime, bestLatency) {
+    if (responseTime <= 0) return 0;
+    const latencyRatio = bestLatency / responseTime;
+    return Math.min(1, Math.log(latencyRatio + 1));
+  }
+
+  private normalizeCost(cost) {
+    if (cost === undefined || cost === null) return 1;
+    // Convert cost to a score where lower costs are better
+    return 1 / (1 + Math.log(1 + cost));
+  }
+
   private sortProviders(providers) {
+    if (!providers || providers.length === 0) return [];
+    
     const bestLatency = Math.min(
-      ...providers.map((p) => p.responseTime || Infinity),
+      ...providers.map(p => p.responseTime || Infinity)
     );
-    return providers.sort((a, b) => {
-      if (a.responseTime === null) return 1;
-      if (b.responseTime === null) return -1;
-      return (
-        this.calculateScore(b, bestLatency) -
-        this.calculateScore(a, bestLatency)
-      );
-    });
+
+    return providers
+      .map(provider => ({
+        ...provider,
+        score: this.calculateScore(provider, bestLatency)
+      }))
+      .sort((a, b) => {
+        if (a.score === b.score) {
+          // If scores are equal, prefer the provider with better latency
+          return a.responseTime - b.responseTime;
+        }
+        return b.score - a.score;
+      });
   }
 
   private generateUpdates(providerGroup) {
     const sortedProviders = this.sortProviders(providerGroup.providers);
-    return sortedProviders.map((provider, index) => ({
-      id: provider.provider.id,
-      responseTime: provider.responseTime,
-      classment: index + 1,
-    }));
+    
+    return sortedProviders.map((provider, index) => {
+      const score = provider.score || 0;
+      const grade = this.calculateGrade(score);
+      
+      return {
+        id: provider.provider.id,
+        responseTime: provider.responseTime,
+        classment: index + 1,
+        score: score,
+        grade: grade
+      };
+    });
   }
 
-  private normalize(value: number) {
-    return value > 0 ? 1 / value : 0;
+  private calculateGrade(score) {
+    if (score < 0) return 'F';
+    if (score >= 0.9) return 'A';
+    if (score >= 0.8) return 'B';
+    if (score >= 0.7) return 'C';
+    if (score >= 0.6) return 'D';
+    return 'F';
   }
 
   private getApiKey(providerId: string) {

@@ -3,8 +3,9 @@ import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../../../services/api.service';
 import { Model } from '../../../../utils/types/models.interface';
 import { Provider } from '../../../../utils/types/providers.interface';
-import { forkJoin, Subject } from 'rxjs';
+import { Subject } from 'rxjs';
 import { takeUntil, switchMap } from 'rxjs/operators';
+import { formatDistanceToNow } from 'date-fns';
 
 interface ModelWithProvider extends Model {
   providerName: string;
@@ -105,23 +106,44 @@ export class ModelProfileComponent implements OnInit, OnDestroy {
     this.activeTab = tab;
   }
 
-  getStatusColor(latency: number): { text: string; bg: string } {
-    if (latency < 500) {
+  getStatusColor(latency: number | null): { text: string; bg: string } {
+    if (latency === null) {
+      return { text: 'text-white', bg: 'bg-red-800' };
+    }
+    if (latency < 200) {
       return { text: 'text-green-800', bg: 'bg-green-100' };
+    } else if (latency < 500) {
+      return { text: 'text-lime-800', bg: 'bg-lime-100' };
     } else if (latency < 1000) {
       return { text: 'text-yellow-800', bg: 'bg-yellow-100' };
+    } else if (latency < 1500) {
+      return { text: 'text-orange-800', bg: 'bg-orange-100' };
     } else {
       return { text: 'text-red-800', bg: 'bg-red-100' };
     }
   }
 
-  getStatus(latency: number): string {
-    if (latency < 500) {
+  getStatus(latency: number | null): string {
+    if (latency === null) {
+      return 'Provider Down';
+    }
+    if (latency < 200) {
       return 'Excellent';
+    } else if (latency < 500) {
+      return 'Very Good';
     } else if (latency < 1000) {
       return 'Good';
+    } else if (latency < 1500) {
+      return 'Fair';
     } else {
       return 'Degraded';
     }
+  }
+
+  formatTimeAgo(date: Date | undefined): string {
+    if (!date || date.getTime() === 0) {
+      return 'Never';
+    }
+    return formatDistanceToNow(date, { addSuffix: true });
   }
 } 
