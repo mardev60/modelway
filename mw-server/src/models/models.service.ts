@@ -78,6 +78,7 @@ export class ModelsService {
       .collection(this.modelsCollection)
       .add({
         ...modelData,
+        quota: 5,
         createdAt: new Date(),
       });
 
