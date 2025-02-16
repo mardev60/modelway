@@ -1,8 +1,16 @@
-import { Controller, Get, Post, Body, UseGuards, Delete, Param } from '@nestjs/common';
-import { ModelsService } from './models.service';
-import { Model } from '../utils/types/models.interface';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '../guards/auth.guard';
 import { RoleGuard } from '../guards/role.guard';
+import { Model } from '../utils/types/models.interface';
+import { ModelsService } from './models.service';
 
 @Controller('models')
 export class ModelsController {
@@ -11,6 +19,11 @@ export class ModelsController {
   @Get()
   async findAll(): Promise<{ [key: string]: Model[] }> {
     return this.modelsService.findAll();
+  }
+
+  @Get('names')
+  async findDistinctModelNames(): Promise<string[]> {
+    return this.modelsService.findDistinctModelNames();
   }
 
   @Post()

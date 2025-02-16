@@ -26,6 +26,7 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
   defaultModel: string = 'meta-llama/llama-3.3-70B-instruct';
   selectedModel: string = this.defaultModel;
   isLoading: boolean = false;
+  models: string[] = [];
 
   // Métriques (à connecter avec un service plus tard)
   metrics = {
@@ -41,7 +42,9 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
     });
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.loadModels();
+  }
 
   ngAfterViewChecked() {
     this.scrollToBottom();
@@ -109,5 +112,17 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
 
   onModelChange() {
     this.defaultModel = this.selectedModel;
+  }
+
+  private loadModels(): void {
+    this.apiService.get<string[]>('/models/names').subscribe({
+      next: (response: string[]) => {
+        this.models = response;
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des modèles:', error);
+        this.models = [this.defaultModel];
+      },
+    });
   }
 }

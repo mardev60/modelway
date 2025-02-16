@@ -49,6 +49,16 @@ export class ModelsService {
     return groupedByName;
   }
 
+  async findDistinctModelNames(): Promise<string[]> {
+    const models = await this.firebaseService
+      .getFirestore()
+      .collection(this.modelsCollection)
+      .get();
+
+    const names = models.docs.map((doc) => doc.data().name);
+    return [...new Set(names)]; // Utilise Set pour éliminer les doublons
+  }
+
   async findByGroup(groupName: string): Promise<Model[]> {
     const snapshot = await this.firebaseService
       .getFirestore()
@@ -90,9 +100,9 @@ export class ModelsService {
       .where('name', '==', name)
       .get();
 
-    return snapshot.docs.map(doc => ({
+    return snapshot.docs.map((doc) => ({
       id: doc.id,
-      ...doc.data()
+      ...doc.data(),
     })) as Model[];
   }
 }
