@@ -28,6 +28,7 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
   isLoading: boolean = false;
   models: string[] = [];
   hasQuota: boolean = true;
+  isLoadingModels: boolean = false;
 
   // Métriques avec valeurs initiales à 0
   metrics = {
@@ -143,13 +144,16 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
    * Récupère les modèles disponibles afin de les afficher dans le select
    */
   private loadModels(): void {
+    this.isLoadingModels = true;
     this.apiService.get<string[]>('/models/names').subscribe({
       next: (response: string[]) => {
         this.models = response;
+        this.isLoadingModels = false;
       },
       error: (error) => {
         console.error('Erreur lors du chargement des modèles:', error);
         this.models = [this.defaultModel];
+        this.isLoadingModels = false;
       },
     });
   }
