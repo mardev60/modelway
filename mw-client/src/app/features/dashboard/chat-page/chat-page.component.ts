@@ -6,7 +6,6 @@ import {
   ViewChild,
 } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { environment } from '../../../../environments/environment';
 import { ApiService } from '../../../services/api.service';
 interface Message {
   content: string;
@@ -73,29 +72,23 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
 
     // Appel à l'API avec le bon format
     this.apiService
-      .post(
-        '/v1/chat/completions',
-        {
-          model: this.selectedModel,
-          messages: [
-            {
-              role: 'user',
-              content: this.messageInput,
-            },
-          ],
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${environment.userApiKey}`,
+      .post('/v1/chat/completions/test', {
+        model: this.selectedModel,
+        messages: [
+          {
+            role: 'user',
+            content: this.messageInput,
           },
-        }
-      )
+        ],
+      })
       .subscribe({
-        next: (response: any) => {
+        next: async (response: any) => {
           this.messages.push({
             role: 'assistant',
             content: response.choices[0].message.content,
           });
+          // Mise à jour du quota après chaque requête réussie
+          await this.updateQuota(this.selectedModel);
         },
         error: (error) => {
           console.error("Erreur lors de l'envoi du message:", error);
