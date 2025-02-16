@@ -1,11 +1,14 @@
 <div
-  class="flex flex-col h-[calc(100vh-130px)] bg-gray-50 rounded-lg shadow-lg overflow-hidden"
+  class="flex flex-col h-[calc(100vh-130px)] bg-gray-50 rounded-lg shadow-lg overflow-hidden container mx-auto"
 >
   <!-- En-tête -->
-  <div class="p-4 bg-white border-b">
+  <div class="p-4 bg-white border-b flex justify-between items-center">
     <div class="flex items-center space-x-2">
       <h1 class="text-xl font-semibold text-gray-800">Chat with</h1>
-      <div *ngIf="isLoadingModels" class="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      <div
+        *ngIf="isLoadingModels"
+        class="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"
+      ></div>
       <select
         [disabled]="isLoading || isLoadingModels"
         [(ngModel)]="selectedModel"
@@ -17,18 +20,15 @@
         </option>
       </select>
     </div>
-    <div class="flex space-x-4 mt-4 text-sm text-gray-600 font-bold">
-      <span>
-        Requests:
-        <span
-          class="text-white px-2 py-1 rounded"
-          [ngClass]="{
-            'bg-red-400': !hasQuota,
-            'bg-green-500': hasQuota
-          }"
-        >
-          {{ metrics.requests.current }}/5
-        </span>
+    <div class="flex space-x-4 text-sm text-gray-600 font-bold items-center">
+      <span
+        class="text-white px-2 py-1 rounded"
+        [ngClass]="{
+          'bg-red-400': !hasQuota,
+          'bg-green-500': hasQuota
+        }"
+      >
+        {{ metrics.requests.current }}/5
       </span>
     </div>
   </div>
