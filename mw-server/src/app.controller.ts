@@ -9,8 +9,8 @@ import { QuotasService } from './quotas/quotas.service';
 @Controller('v1')
 export class AppController {
   constructor(
-    private appService: AppService,
-    private quotasService: QuotasService,
+    private readonly appService: AppService,
+    private readonly quotasService: QuotasService
   ) {}
 
   /*
@@ -21,7 +21,29 @@ export class AppController {
   async chatCompletions(
     @Body() body: any,
     @User() user: any,
-    @Res() response: Response,
+    @Res() response: Response
+  ) {
+    return this.handleChatRequest(body, user, response, false);
+  }
+
+  /*
+   * Route pour que l'utilisateur connecté puisse tester un modèle depuis ModelWay avec un quota limité
+   */
+  @Post('chat/completions/test')
+  @UseGuards(AuthGuard)
+  async chatCompletionsTest(
+    @Body() body: any,
+    @User() user: any,
+    @Res() response: Response
+  ) {
+    return this.handleChatRequest(body, user, response, true);
+  }
+
+  private async handleChatRequest(
+    body: any,
+    user: any,
+    response: Response,
+    isTest: boolean
   ) {
     const { messages, model, stream = false } = body;
 
@@ -41,7 +63,7 @@ export class AppController {
       });
     }
 
-    if(user.credits <= 0) {
+    if(user.credits <= 0 && !isTest) {
       return response.json({
         error: {
           message: 'No credits left.',
@@ -70,6 +92,7 @@ export class AppController {
           systemPrompt,
           userPrompt,
           userId: user.uid,
+          isTest
         });
 
         for await (const chunk of stream) {
@@ -87,64 +110,12 @@ export class AppController {
           systemPrompt,
           userPrompt,
           userId: user.uid,
+          isTest
         });
         response.json(result);
       } catch (error) {
         response.status(500).json({ error: error.message });
       }
-    }
-  }
-
-  /*
-   * Route pour que l'utilisateur connecté puisse tester un modèle depuis ModelWay avec un quota limité
-   */
-  @Post('chat/completions/test')
-  @UseGuards(AuthGuard)
-  async chatCompletionsTest(
-    @Body() body: any,
-    @User() user: any,
-    @Res() response: Response,
-  ) {
-    const hasQuota = await this.quotasService.checkUserQuota(
-      user.uid,
-      body.model,
-    );
-
-    if (!hasQuota) {
-      return response.status(429).json({
-        error: { message: 'Quota dépassé. Veuillez réessayer plus tard.' },
-      });
-    }
-
-    const { messages, model, stream = false } = body;
-
-    if (!messages || !model) {
-      return response.status(400).json({
-        error: { message: 'Messages and model are required.' },
-      });
-    }
-
-    const systemPrompt = messages
-      .filter((msg) => msg.role === 'system')
-      .map((msg) => msg.content)
-      .join('\n');
-
-    const userPrompt = messages
-      .filter((msg) => msg.role === 'user')
-      .map((msg) => msg.content)
-      .join('\n');
-
-    try {
-      const result = await this.appService.callApi({
-        model,
-        systemPrompt,
-        userPrompt,
-        userId: user.uid,
-      });
-      await this.quotasService.decrementQuota(user.uid, body.model);
-      response.json(result);
-    } catch (error) {
-      response.status(500).json({ error: error.message });
     }
   }
 }
