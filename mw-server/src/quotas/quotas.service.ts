@@ -43,20 +43,29 @@ export class QuotasService {
   }
 
   async decrementQuota(userId: string, modelName: string): Promise<void> {
-    const snapshot = await this.firebaseService
-      .getFirestore()
-      .collection(this.quotasCollection)
-      .where('user_id', '==', userId)
-      .where('model_name', '==', modelName)
-      .get();
+    try {
+      const sanitizedModelName = modelName.replace(/\//g, '_');
+      
+      const docRef = this.firebaseService
+        .getFirestore()
+        .collection('users')
+        .doc(userId)
+        .collection('models')
+        .doc(sanitizedModelName);
 
-    if (!snapshot.empty) {
-      const docRef = snapshot.docs[0].ref;
-      const quota = snapshot.docs[0].data();
+      const doc = await docRef.get();
 
-      await docRef.update({
-        quota: Math.max(0, quota.quota - 1),
-      });
+      if (doc.exists) {
+        const quota = doc.data()?.quota || 0;
+        await docRef.update({
+          quota: Math.max(0, quota - 1)
+        });
+      } else {
+        console.warn(`No quota document found for user ${userId} and model ${modelName}`);
+      }
+    } catch (error) {
+      console.error('Error decrementing quota:', error);
+      throw new Error(`Error decrementing quota: ${error.message}`);
     }
   }
 }
