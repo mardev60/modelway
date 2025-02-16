@@ -4,7 +4,7 @@ import { FirebaseService } from './services/firebase.service';
 import { Model } from './utils/types/models.interface';
 import { Provider } from './utils/types/providers.interface';
 import { HistoryService } from './history/history.service';
-
+import { UsersService } from './users/users.service';
 type ChatMessage = OpenAI.Chat.ChatCompletionMessageParam;
 
 interface APICallOptions {
@@ -15,6 +15,7 @@ interface APICallOptions {
   maxRetries?: number;
   retryDelay?: number;
   userId: string;
+  isTest?: boolean;
 }
 
 @Injectable()
@@ -27,7 +28,8 @@ export class AppService {
 
   constructor(
     private readonly firebaseService: FirebaseService,
-    private readonly historyService: HistoryService
+    private readonly historyService: HistoryService,
+    private readonly usersService: UsersService
   ) {}
 
   async callApi({
@@ -38,6 +40,7 @@ export class AppService {
     maxRetries = 4,
     retryDelay = 500,
     userId,
+    isTest = false
   }: APICallOptions): Promise<OpenAI.Chat.Completions.ChatCompletion> {
     this.logger.log(`Calling API for model ${model} (classement ${classment})`);
 
@@ -99,10 +102,16 @@ export class AppService {
           max_tokens: 1,
         });
 
-        // Calculate total cost for million tokens and convert to per-token cost
-        const inputCost = (response.usage.prompt_tokens * Number(provider.input_price)) / 1_000_000;
-        const outputCost = (response.usage.completion_tokens * Number(provider.output_price)) / 1_000_000;
-        const totalCost = inputCost + outputCost;
+        // Move totalCost declaration outside the if block
+        let totalCost = 0;
+        if (!isTest) {
+          const inputCost = ((response.usage.prompt_tokens * Number(provider.input_price)) / 1_000_000) + 
+                           ((response.usage.prompt_tokens * 0.0010) / 1_000) + 0.0001;
+          const outputCost = ((response.usage.completion_tokens * Number(provider.output_price)) / 1_000_000) + 
+                            ((response.usage.completion_tokens * 0.0020) / 1_000) + 0.0001;
+          totalCost = inputCost + outputCost;
+          this.usersService.decrementCredits(userId, totalCost);
+        }
 
         // Save history asynchronously without waiting for it
         this.historyService.create({
@@ -112,7 +121,7 @@ export class AppService {
           app: 'Modelway API CALL',
           inputTokens: response.usage.prompt_tokens,
           outputTokens: response.usage.completion_tokens,
-          cost: totalCost,
+          cost: isTest ? 0 : totalCost,
           speed: response.usage.total_tokens,
           provider: this.getProviderName(provider.provider_id)
         }).catch(error => {
@@ -138,6 +147,7 @@ export class AppService {
           maxRetries,
           retryDelay,
           userId,
+          isTest,
         });
       }
     }
@@ -153,6 +163,7 @@ export class AppService {
     maxRetries = 4,
     retryDelay = 500,
     userId,
+    isTest = false
   }: APICallOptions) {
     this.logger.log(`Streaming API for model ${model} (classement ${classment})`);
 
@@ -248,9 +259,14 @@ export class AppService {
           const completionTokens = Math.ceil(fullResponse.length / 4);
           
           const endTime = Date.now();
-          const inputCost = (promptTokens * Number(provider.input_price)) / 1_000_000;
-          const outputCost = (completionTokens * Number(provider.output_price)) / 1_000_000;
+          const inputCost = ((promptTokens* Number(provider.input_price)) / 1_000_000) + ((promptTokens * 0.0010) / 1_000) + 0.0001;
+          const outputCost = ((completionTokens * Number(provider.output_price)) / 1_000_000) + ((completionTokens * 0.0020) / 1_000) + 0.0001;
           const totalCost = inputCost + outputCost;
+
+          // Only decrement credits if not in test mode
+          if (!isTest) {
+            self.usersService.decrementCredits(userId, totalCost);
+          }
 
           self.historyService
             .create({
@@ -290,6 +306,7 @@ export class AppService {
           maxRetries,
           retryDelay,
           userId,
+          isTest,
         });
       }
     }

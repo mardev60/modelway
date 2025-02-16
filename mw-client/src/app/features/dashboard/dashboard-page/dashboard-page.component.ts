@@ -68,4 +68,8 @@ export class DashboardPageComponent implements OnInit {
     const index = seed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length;
     return `${colors[index].bg} ${colors[index].text}`;
   }
+
+  formatCredits(credits: number): string {
+    return (Math.floor(credits * 100) / 100).toFixed(2);
+  }
 }

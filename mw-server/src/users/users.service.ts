@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { FirebaseService } from '../services/firebase.service';
 import { User } from '../utils/types/users.interface';
-
+import * as firebase from 'firebase-admin';
 @Injectable()
 export class UsersService {
   private readonly usersCollection = 'users';
@@ -68,5 +68,19 @@ export class UsersService {
       id: userDoc.docs[0].id,
       ...userDoc.docs[0].data(),
     } as User;
+  }
+
+  async decrementCredits(userId: string, amount: number): Promise<void> {
+    const userRef = await this.firebaseService.getFirestore()
+      .collection(this.usersCollection)
+      .where('uid', '==', userId)
+      .get();
+
+    if (userRef.empty) {
+      throw new Error('User not found');
+    }
+
+    const userDoc = userRef.docs[0];
+    await userDoc.ref.update({ credits: firebase.firestore.FieldValue.increment(-amount) });
   }
 } 
