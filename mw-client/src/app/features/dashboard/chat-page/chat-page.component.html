@@ -10,10 +10,9 @@
         (change)="onModelChange()"
         class="px-3 py-2 border rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
-        <option value="meta-llama/llama-3.3-70B-instruct">
-          Meta Llama 3.3 70B Instruct
+        <option *ngFor="let model of models" [value]="model">
+          {{ model }}
         </option>
-        <option value="deepseek/deepseek-v3">DeepSeek V3</option>
       </select>
     </div>
     <div class="flex gap-4 mt-2 text-sm text-gray-600">
@@ -83,6 +82,7 @@
       <input
         type="text"
         [(ngModel)]="messageInput"
+        (keyup.enter)="sendMessage()"
         placeholder="Write your message here..."
         class="flex-1 p-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
