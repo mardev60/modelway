@@ -29,7 +29,7 @@ export class QuotasService {
 
         await newQuotaRef.set({
           user_id: userId,
-          model_id: modelName,
+          model_name: modelName,
           quota: 5,
         });
 
