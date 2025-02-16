@@ -17,8 +17,23 @@ export class QuotasService {
         .get();
 
       if (snapshot.empty) {
-        console.log('Aucune donnée trouvée pour cet utilisateur et ce modèle');
-        return 0;
+        console.log(
+          `🎯 Aucun quota trouvé pour ${userId} et ${modelName}, initialisation à 5.`,
+        );
+
+        // Initialiser une nouvelle entrée avec 5 quotas
+        const newQuotaRef = this.firebaseService
+          .getFirestore()
+          .collection(this.quotasCollection)
+          .doc(`${userId}_${modelName}`); // Clé unique utilisateur + modèle
+
+        await newQuotaRef.set({
+          user_id: userId,
+          model_id: modelName,
+          quota: 5,
+        });
+
+        return 5; // Retourne le quota par défaut
       }
 
       const quotaDoc = snapshot.docs[0].data();
