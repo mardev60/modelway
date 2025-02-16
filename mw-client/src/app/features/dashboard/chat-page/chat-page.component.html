@@ -16,8 +16,11 @@
       </select>
     </div>
     <div class="flex gap-4 mt-2 text-sm text-gray-600">
-      <span>Requests: 3/5</span>
-      <span>Tokens: 1024/2048</span>
+      <span
+        >Requests:
+        <span class="font-bold">{{ metrics.requests.current }}/5</span></span
+      >
+      <span>Tokens: <span class="font-bold">1024 &rarr; 2048</span></span>
     </div>
   </div>
 
@@ -82,7 +85,6 @@
       <input
         type="text"
         [(ngModel)]="messageInput"
-        (keyup.enter)="sendMessage()"
         placeholder="Write your message here..."
         class="flex-1 p-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
       />

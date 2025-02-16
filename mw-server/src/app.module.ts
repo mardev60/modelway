@@ -9,6 +9,7 @@ import { UsersModule } from './users/users.module';
 import { FirebaseService } from './services/firebase.service';
 import { ApiTokenModule } from './api-tokens/api-token.module';
 import { HistoryModule } from './history/history.module';
+import { QuotasModule } from './quotas/quotas.module';
 
 @Module({
   imports: [
@@ -18,7 +19,8 @@ import { HistoryModule } from './history/history.module';
     PingModule,
     UsersModule,
     ApiTokenModule,
-    HistoryModule
+    HistoryModule,
+    QuotasModule
   ],
   controllers: [AppController],
   providers: [AppService, FirebaseService],

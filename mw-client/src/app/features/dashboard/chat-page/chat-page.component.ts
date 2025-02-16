@@ -5,6 +5,7 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiService } from '../../../services/api.service';
 interface Message {
@@ -28,10 +29,10 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
   isLoading: boolean = false;
   models: string[] = [];
 
-  // Métriques (à connecter avec un service plus tard)
+  // Métriques avec valeurs initiales à 0
   metrics = {
-    requests: { current: 3, max: 5 },
-    tokens: { current: 1024, max: 2048 },
+    requests: { current: 0, max: 0 },
+    tokens: { current: 0, max: 0 },
   };
 
   constructor(private apiService: ApiService) {
@@ -40,6 +41,7 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
       role: 'assistant',
       content: "Bonjour! Comment puis-je vous aider aujourd'hui?",
     });
+    this.updateQuota(this.defaultModel);
   }
 
   ngOnInit(): void {
@@ -112,8 +114,39 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
 
   onModelChange() {
     this.defaultModel = this.selectedModel;
+    this.updateQuota(this.selectedModel);
   }
 
+  /*
+   * Met à jour le quota restant pour un utilisateur pour un modèle dans la métrique "Requests"
+   */
+  private async updateQuota(modelName: string): Promise<void> {
+    const remainingQuota = await this.checkQuota(modelName);
+    this.metrics.requests.current = remainingQuota;
+  }
+
+  /*
+   * Vérifie le quota restant pour un utilisateur pour un modèle
+   */
+  private async checkQuota(modelName: string): Promise<number> {
+    try {
+      // Encoder le nom du modèle pour gérer les caractères spéciaux
+      const encodedModelName = encodeURIComponent(modelName);
+      const response = await firstValueFrom(
+        this.apiService.get<{ remaining: number }>(
+          `/quotas/check/${encodedModelName}`
+        )
+      );
+      return response.remaining;
+    } catch (error) {
+      console.error('Erreur lors de la vérification du quota:', error);
+      return 0;
+    }
+  }
+
+  /*
+   * Récupère les modèles disponibles afin de les afficher dans le select
+   */
   private loadModels(): void {
     this.apiService.get<string[]>('/models/names').subscribe({
       next: (response: string[]) => {
