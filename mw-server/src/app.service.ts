@@ -4,7 +4,7 @@ import { FirebaseService } from './services/firebase.service';
 import { Model } from './utils/types/models.interface';
 import { Provider } from './utils/types/providers.interface';
 import { HistoryService } from './history/history.service';
-
+import { UsersService } from './users/users.service';
 type ChatMessage = OpenAI.Chat.ChatCompletionMessageParam;
 
 interface APICallOptions {
@@ -27,7 +27,8 @@ export class AppService {
 
   constructor(
     private readonly firebaseService: FirebaseService,
-    private readonly historyService: HistoryService
+    private readonly historyService: HistoryService,
+    private readonly usersService: UsersService
   ) {}
 
   async callApi({
@@ -100,9 +101,11 @@ export class AppService {
         });
 
         // Calculate total cost for million tokens and convert to per-token cost
-        const inputCost = (response.usage.prompt_tokens * Number(provider.input_price)) / 1_000_000;
-        const outputCost = (response.usage.completion_tokens * Number(provider.output_price)) / 1_000_000;
+        const inputCost = ((response.usage.prompt_tokens * Number(provider.input_price)) / 1_000_000) + ((response.usage.prompt_tokens * 0.0010) / 1_000) + 0.0001;
+        const outputCost = ((response.usage.completion_tokens * Number(provider.output_price)) / 1_000_000) + ((response.usage.completion_tokens * 0.0020) / 1_000) + 0.0001;
         const totalCost = inputCost + outputCost;
+
+        this.usersService.decrementCredits(userId, totalCost);
 
         // Save history asynchronously without waiting for it
         this.historyService.create({

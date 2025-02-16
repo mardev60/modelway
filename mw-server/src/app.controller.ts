@@ -41,6 +41,14 @@ export class AppController {
       });
     }
 
+    if(user.credits <= 0) {
+      return response.json({
+        error: {
+          message: 'No credits left.',
+        },
+      });
+    }
+
     const systemPrompt = messages
       .filter((msg) => msg.role === 'system')
       .map((msg) => msg.content)
