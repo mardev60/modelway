@@ -7,40 +7,38 @@ export class QuotasService {
 
   constructor(private readonly firebaseService: FirebaseService) {}
 
-  async checkUserQuota(userId: string, modelName: string): Promise<number> {
+  async checkUserQuota(userId: string, modelId: string): Promise<number> {
+    const sanitizedModelId = modelId.replace(/\//g, '_');
+  
     try {
-      const snapshot = await this.firebaseService
+      const docRef = this.firebaseService
         .getFirestore()
-        .collection(this.quotasCollection)
-        .where('user_id', '==', userId)
-        .where('model_name', '==', modelName)
-        .get();
+        .collection('users')
+        .doc(userId)
+        .collection('models')
+        .doc(sanitizedModelId);
 
-      if (snapshot.empty) {
+      const doc = await docRef.get();
+
+      if (!doc.exists) {
         console.log(
-          `🎯 Aucun quota trouvé pour ${userId} et ${modelName}, initialisation à 5.`,
+          `🎯 No quota found for ${userId} and ${modelId}, initializing to 5.`,
         );
 
-        // Initialiser une nouvelle entrée avec 5 quotas
-        const newQuotaRef = this.firebaseService
-          .getFirestore()
-          .collection(this.quotasCollection)
-          .doc(`${userId}_${modelName}`); // Clé unique utilisateur + modèle
-
-        await newQuotaRef.set({
+        await docRef.set({
           user_id: userId,
-          model_name: modelName,
+          model_name: modelId,
           quota: 5,
         });
 
-        return 5; // Retourne le quota par défaut
+        return 5;
       }
 
-      const quotaDoc = snapshot.docs[0].data();
+      const quotaDoc = doc.data();
       return quotaDoc.quota;
     } catch (error) {
       console.error('Error in checkUserQuota:', error);
-      return 0;
+      throw new Error(`Error checking quota: ${error.message}`);
     }
   }
 
