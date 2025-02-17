@@ -1,10 +1,27 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
+interface Provider {
+  name: string;
+  url: string;
+}
+
+interface Model {
+  base_url: string;
+  classment: number;
+  id: string;
+  input_price: number;
+  latency: number;
+  name: string;
+  output_price: number;
+  provider_id: string;
+  src_model: string;
+}
+
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ApiService {
   private apiUrl = environment.apiUrl;
@@ -15,7 +32,7 @@ export class ApiService {
   get<T>(endpoint: string, options = {}): Observable<T> {
     return this.http.get<T>(`${this.apiUrl}${endpoint}`, {
       ...options,
-      withCredentials: true // This is important for cookies
+      withCredentials: true, // This is important for cookies
     });
   }
 
@@ -23,7 +40,7 @@ export class ApiService {
   post<T>(endpoint: string, data: any, options = {}): Observable<T> {
     return this.http.post<T>(`${this.apiUrl}${endpoint}`, data, {
       ...options,
-      withCredentials: true
+      withCredentials: true,
     });
   }
 
@@ -31,7 +48,7 @@ export class ApiService {
   put<T>(endpoint: string, data: any, options = {}): Observable<T> {
     return this.http.put<T>(`${this.apiUrl}${endpoint}`, data, {
       ...options,
-      withCredentials: true
+      withCredentials: true,
     });
   }
 
@@ -39,7 +56,7 @@ export class ApiService {
   delete<T>(endpoint: string, options = {}): Observable<T> {
     return this.http.delete<T>(`${this.apiUrl}${endpoint}`, {
       ...options,
-      withCredentials: true
+      withCredentials: true,
     });
   }
 
@@ -56,10 +73,19 @@ export class ApiService {
 
   // Remove auth token from cookie
   removeAuthToken(): void {
-    document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    document.cookie =
+      'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
   }
 
   getUserInfo(): Observable<any> {
     return this.get<any>('/users/me');
   }
-} 
+
+  getProvider(providerName: string): Observable<Provider> {
+    return this.get<Provider>(`/providers/${providerName}`);
+  }
+
+  getProviderModels(providerId: string): Observable<Model[]> {
+    return this.get<Model[]>(`/providers/${providerId}/models`);
+  }
+}
