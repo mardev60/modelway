@@ -113,7 +113,7 @@ export class AppController {
           isTest,
         });
         response.json(result);
-        await this.quotasService.decrementQuota(user.uid, model);
+        isTest ? await this.quotasService.decrementQuota(user.uid, model) : null;
       } catch (error) {
         response.status(500).json({ error: error.message });
       }
