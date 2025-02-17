@@ -1,10 +1,10 @@
 import { Location } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { formatDistanceToNow } from 'date-fns';
 import { Subject } from 'rxjs';
 import { switchMap, takeUntil } from 'rxjs/operators';
 import { ApiService } from '../../../../services/api.service';
+import { StatusService } from '../../../../services/status.service';
 import { Model } from '../../../../utils/types/models.interface';
 import { Provider } from '../../../../utils/types/providers.interface';
 
@@ -29,7 +29,8 @@ export class ModelProfileComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private apiService: ApiService,
-    private location: Location
+    private location: Location,
+    private statusService: StatusService
   ) {}
 
   ngOnInit() {
@@ -71,92 +72,36 @@ export class ModelProfileComponent implements OnInit, OnDestroy {
       });
   }
 
-  goBack() {
-    this.location.back();
-  }
-
-  private formatFirebaseTimestamp(timestamp: any): Date {
-    if (!timestamp) return new Date(0);
-
-    // Handle Firestore Timestamp with _seconds and _nanoseconds
-    if (timestamp._seconds) {
-      return new Date(
-        timestamp._seconds * 1000 + timestamp._nanoseconds / 1000000
-      );
-    }
-
-    // Handle Firestore Timestamp object
-    if (timestamp && typeof timestamp.toDate === 'function') {
-      return timestamp.toDate();
-    }
-
-    // Handle string date
-    if (typeof timestamp === 'string') {
-      return new Date(timestamp);
-    }
-
-    // Handle regular seconds timestamp
-    if (timestamp.seconds) {
-      return new Date(timestamp.seconds * 1000);
-    }
-
-    return new Date(0);
-  }
-
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  isOld(date: Date | undefined): boolean {
-    if (!date) return true;
-    const now = new Date();
-    const diffInMinutes = (now.getTime() - date.getTime()) / (1000 * 60);
-    return diffInMinutes > 5;
+  goBack() {
+    this.location.back();
   }
 
   switchTab(tab: 'overview' | 'api') {
     this.activeTab = tab;
   }
 
+  formatFirebaseTimestamp(timestamp: any): Date {
+    return this.statusService.formatFirebaseTimestamp(timestamp);
+  }
+
+  isOld(date: Date | undefined): boolean {
+    return this.statusService.isOld(date);
+  }
+
   getStatusColor(latency: number | null): { text: string; bg: string } {
-    if (latency === null) {
-      return { text: 'text-white', bg: 'bg-red-800' };
-    }
-    if (latency < 200) {
-      return { text: 'text-green-800', bg: 'bg-green-100' };
-    } else if (latency < 500) {
-      return { text: 'text-lime-800', bg: 'bg-lime-100' };
-    } else if (latency < 1000) {
-      return { text: 'text-yellow-800', bg: 'bg-yellow-100' };
-    } else if (latency < 1500) {
-      return { text: 'text-orange-800', bg: 'bg-orange-100' };
-    } else {
-      return { text: 'text-red-800', bg: 'bg-red-100' };
-    }
+    return this.statusService.getStatusColor(latency);
   }
 
   getStatus(latency: number | null): string {
-    if (latency === null) {
-      return 'Provider Down';
-    }
-    if (latency < 200) {
-      return 'Excellent';
-    } else if (latency < 500) {
-      return 'Very Good';
-    } else if (latency < 1000) {
-      return 'Good';
-    } else if (latency < 1500) {
-      return 'Fair';
-    } else {
-      return 'Degraded';
-    }
+    return this.statusService.getStatus(latency);
   }
 
   formatTimeAgo(date: Date | undefined): string {
-    if (!date || date.getTime() === 0) {
-      return 'Never';
-    }
-    return formatDistanceToNow(date, { addSuffix: true });
+    return this.statusService.formatTimeAgo(date);
   }
 }

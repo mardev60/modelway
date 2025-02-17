@@ -66,11 +66,11 @@ export class ApiService {
     return this.get<any>('/users/me');
   }
 
-  getProvider(providerName: string): Observable<Provider> {
+  getProviderByName(providerName: string): Observable<Provider> {
     return this.get<Provider>(`/providers/${providerName}`);
   }
 
-  getProviderModels(providerId: string): Observable<Model[]> {
+  getProviderModelsById(providerId: string): Observable<Model[]> {
     return this.get<Model[]>(`/providers/${providerId}/models`);
   }
 }

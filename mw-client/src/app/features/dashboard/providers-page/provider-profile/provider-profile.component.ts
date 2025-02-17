@@ -1,50 +1,60 @@
 import { Location } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { Subject } from 'rxjs';
 import { ApiService } from '../../../../services/api.service';
+import { StatusService } from '../../../../services/status.service';
 import { Model } from '../../../../utils/types/models.interface';
+
+interface ModelWithLastPingFormatted extends Model {
+  formattedLastPing?: Date;
+}
 
 @Component({
   selector: 'app-provider-profile',
   standalone: false,
   templateUrl: './provider-profile.component.html',
 })
-export class ProviderProfileComponent {
+export class ProviderProfileComponent implements OnInit, OnDestroy {
   isLoading = false;
-  provider: any = null; // Will store provider data
-  models: Model[] = [];
+  provider: any = null;
+  models: ModelWithLastPingFormatted[] = [];
+  private destroy$ = new Subject<void>();
 
   constructor(
     private route: ActivatedRoute,
     private apiService: ApiService,
-    private location: Location
-  ) {
-    this.loadProviderData();
-  }
+    private location: Location,
+    private statusService: StatusService
+  ) {}
 
-  goBack() {
-    this.location.back();
-  }
-
-  private loadProviderData(): void {
-    this.isLoading = true;
+  ngOnInit() {
     this.route.params.subscribe((params) => {
       const providerName = params['name'];
+      this.isLoading = true;
+
       if (providerName) {
-        this.apiService.getProvider(providerName).subscribe({
+        this.apiService.getProviderByName(providerName).subscribe({
           next: (data) => {
             this.provider = data;
             if (this.provider && this.provider.id) {
-              this.apiService.getProviderModels(this.provider.id).subscribe({
-                next: (models) => {
-                  this.models = models;
-                  this.isLoading = false;
-                },
-                error: (error) => {
-                  console.error('Error loading models:', error);
-                  this.isLoading = false;
-                },
-              });
+              this.apiService
+                .getProviderModelsById(this.provider.id)
+                .subscribe({
+                  next: (models) => {
+                    this.models = models.map((model) => ({
+                      ...model,
+                      formattedLastPing: this.formatFirebaseTimestamp(
+                        model.last_ping
+                      ),
+                    }));
+                    this.isLoading = false;
+                  },
+                  error: (error) => {
+                    console.error('Error loading models:', error);
+                    this.isLoading = false;
+                  },
+                });
             } else {
               console.error('Provider ID not found');
               this.isLoading = false;
@@ -57,5 +67,34 @@ export class ProviderProfileComponent {
         });
       }
     });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  goBack() {
+    this.location.back();
+  }
+
+  formatFirebaseTimestamp(timestamp: any): Date {
+    return this.statusService.formatFirebaseTimestamp(timestamp);
+  }
+
+  isOld(date: Date | undefined): boolean {
+    return this.statusService.isOld(date);
+  }
+
+  getStatusColor(latency: number | null): { text: string; bg: string } {
+    return this.statusService.getStatusColor(latency);
+  }
+
+  getStatus(latency: number | null): string {
+    return this.statusService.getStatus(latency);
+  }
+
+  formatTimeAgo(date: Date | undefined): string {
+    return this.statusService.formatTimeAgo(date);
   }
 }
