@@ -81,18 +81,42 @@ export class AppController {
       .map((msg) => msg.content)
       .join('\n');
 
-    try {
-      const result = await this.appService.callApi({
-        model,
-        systemPrompt,
-        userPrompt,
-        userId: user.uid,
-        isTest,
-      });
-      await this.quotasService.decrementQuota(user.uid, model);
-      response.json(result);
-    } catch (error) {
-      response.status(500).json({ error: error.message });
+    if (stream) {
+      response.setHeader('Content-Type', 'text/event-stream');
+      response.setHeader('Cache-Control', 'no-cache');
+      response.setHeader('Connection', 'keep-alive');
+
+      try {
+        const stream = await this.appService.streamResponse({
+          model,
+          systemPrompt,
+          userPrompt,
+          userId: user.uid,
+          isTest,
+        });
+
+        for await (const chunk of stream) {
+          response.write(`data: ${JSON.stringify(chunk)}\n\n`);
+        }
+        response.end();
+      } catch (error) {
+        response.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
+        response.end();
+      }
+    } else {
+      try {
+        const result = await this.appService.callApi({
+          model,
+          systemPrompt,
+          userPrompt,
+          userId: user.uid,
+          isTest,
+        });
+        response.json(result);
+        await this.quotasService.decrementQuota(user.uid, model);
+      } catch (error) {
+        response.status(500).json({ error: error.message });
+      }
     }
   }
 }
