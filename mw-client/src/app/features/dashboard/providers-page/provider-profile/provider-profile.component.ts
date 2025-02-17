@@ -2,18 +2,7 @@ import { Location } from '@angular/common';
 import { Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../../../services/api.service';
-
-export interface Model {
-  base_url: string;
-  classment: number;
-  id: string;
-  input_price: number;
-  latency: number;
-  name: string;
-  output_price: number;
-  provider_id: string;
-  src_model: string;
-}
+import { Model } from '../../../../utils/types/models.interface';
 
 @Component({
   selector: 'app-provider-profile',
@@ -48,7 +37,6 @@ export class ProviderProfileComponent {
             if (this.provider && this.provider.id) {
               this.apiService.getProviderModels(this.provider.id).subscribe({
                 next: (models) => {
-                  console.log('Models:', models);
                   this.models = models;
                   this.isLoading = false;
                 },

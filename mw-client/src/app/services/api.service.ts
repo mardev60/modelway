@@ -2,23 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-
-interface Provider {
-  name: string;
-  url: string;
-}
-
-interface Model {
-  base_url: string;
-  classment: number;
-  id: string;
-  input_price: number;
-  latency: number;
-  name: string;
-  output_price: number;
-  provider_id: string;
-  src_model: string;
-}
+import { Model } from '../utils/types/models.interface';
+import { Provider } from '../utils/types/providers.interface';
 
 @Injectable({
   providedIn: 'root',
