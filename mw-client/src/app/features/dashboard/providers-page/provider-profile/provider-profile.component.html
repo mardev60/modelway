@@ -9,10 +9,7 @@
   <div *ngIf="!isLoading && provider">
     <div class="mb-8">
       <div class="flex items-center gap-4 mb-4">
-        <button
-          routerLink="/app/providers"
-          class="text-gray-600 hover:text-gray-800"
-        >
+        <button (click)="goBack()" class="text-gray-600 hover:text-gray-800">
           ← Back
         </button>
         <h1 class="text-2xl font-bold">{{ provider.name }}</h1>
@@ -51,9 +48,15 @@
                   *ngFor="let model of models"
                   class="border-t border-gray-200"
                 >
-                  <td class="py-3 px-4 font-medium">
-                    <span>{{ model.name }}</span>
+                  <td class="py-3 px-4">
+                    <a
+                      [routerLink]="['/app/models', model.name]"
+                      class="text-primary-600 hover:text-primary-800 hover:underline"
+                    >
+                      {{ model.name }}
+                    </a>
                   </td>
+
                   <td class="py-3 px-4 font-medium">
                     <span>{{ model.latency }}</span>
                   </td>

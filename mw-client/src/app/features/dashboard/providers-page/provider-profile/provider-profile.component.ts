@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import { Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../../../services/api.service';
@@ -24,8 +25,16 @@ export class ProviderProfileComponent {
   provider: any = null; // Will store provider data
   models: Model[] = [];
 
-  constructor(private route: ActivatedRoute, private apiService: ApiService) {
+  constructor(
+    private route: ActivatedRoute,
+    private apiService: ApiService,
+    private location: Location
+  ) {
     this.loadProviderData();
+  }
+
+  goBack() {
+    this.location.back();
   }
 
   private loadProviderData(): void {

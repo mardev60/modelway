@@ -1,11 +1,12 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Location } from '@angular/common';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { formatDistanceToNow } from 'date-fns';
+import { Subject } from 'rxjs';
+import { switchMap, takeUntil } from 'rxjs/operators';
 import { ApiService } from '../../../../services/api.service';
 import { Model } from '../../../../utils/types/models.interface';
 import { Provider } from '../../../../utils/types/providers.interface';
-import { Subject } from 'rxjs';
-import { takeUntil, switchMap } from 'rxjs/operators';
-import { formatDistanceToNow } from 'date-fns';
 
 interface ModelWithProvider extends Model {
   providerName: string;
@@ -15,7 +16,7 @@ interface ModelWithProvider extends Model {
 @Component({
   selector: 'app-model-profile',
   templateUrl: './model-profile.component.html',
-  standalone: false
+  standalone: false,
 })
 export class ModelProfileComponent implements OnInit, OnDestroy {
   modelName: string | null = null;
@@ -27,66 +28,78 @@ export class ModelProfileComponent implements OnInit, OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
-    private apiService: ApiService
+    private apiService: ApiService,
+    private location: Location
   ) {}
 
   ngOnInit() {
-    this.route.params.pipe(
-      takeUntil(this.destroy$),
-      switchMap(params => {
-        this.modelName = params['name'];
-        this.isLoading = true;
-        return this.apiService.get<Provider[]>('/providers');
-      }),
-      switchMap(providers => {
-        this.providers = providers.reduce((acc, provider) => {
-          acc[provider.id!] = provider;
-          return acc;
-        }, {} as { [key: string]: Provider });
-        
-        return this.apiService.post<Model[]>('/models/search', { name: this.modelName });
-      })
-    ).subscribe({
-      next: (models) => {
-        this.models = models
-          .map(model => ({
-            ...model,
-            providerName: this.providers[model.provider_id]?.name || 'Unknown Provider',
-            formattedLastPing: this.formatFirebaseTimestamp(model.last_ping)
-          }))
-          .sort((a, b) => (a.classment || 999) - (b.classment || 999));
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error loading data:', error);
-        this.isLoading = false;
-      }
-    });
+    this.route.params
+      .pipe(
+        takeUntil(this.destroy$),
+        switchMap((params) => {
+          this.modelName = params['name'];
+          this.isLoading = true;
+          return this.apiService.get<Provider[]>('/providers');
+        }),
+        switchMap((providers) => {
+          this.providers = providers.reduce((acc, provider) => {
+            acc[provider.id!] = provider;
+            return acc;
+          }, {} as { [key: string]: Provider });
+
+          return this.apiService.post<Model[]>('/models/search', {
+            name: this.modelName,
+          });
+        })
+      )
+      .subscribe({
+        next: (models) => {
+          this.models = models
+            .map((model) => ({
+              ...model,
+              providerName:
+                this.providers[model.provider_id]?.name || 'Unknown Provider',
+              formattedLastPing: this.formatFirebaseTimestamp(model.last_ping),
+            }))
+            .sort((a, b) => (a.classment || 999) - (b.classment || 999));
+          this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('Error loading data:', error);
+          this.isLoading = false;
+        },
+      });
+  }
+
+  goBack() {
+    this.location.back();
   }
 
   private formatFirebaseTimestamp(timestamp: any): Date {
     if (!timestamp) return new Date(0);
-    
+
     // Handle Firestore Timestamp with _seconds and _nanoseconds
     if (timestamp._seconds) {
-      return new Date(timestamp._seconds * 1000 + timestamp._nanoseconds / 1000000);
+      return new Date(
+        timestamp._seconds * 1000 + timestamp._nanoseconds / 1000000
+      );
     }
-    
+
     // Handle Firestore Timestamp object
     if (timestamp && typeof timestamp.toDate === 'function') {
       return timestamp.toDate();
     }
-    
+
     // Handle string date
     if (typeof timestamp === 'string') {
       return new Date(timestamp);
     }
-    
+
     // Handle regular seconds timestamp
     if (timestamp.seconds) {
       return new Date(timestamp.seconds * 1000);
     }
-    
+
     return new Date(0);
   }
 
@@ -146,4 +159,4 @@ export class ModelProfileComponent implements OnInit, OnDestroy {
     }
     return formatDistanceToNow(date, { addSuffix: true });
   }
-} 
+}
