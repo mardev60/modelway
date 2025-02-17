@@ -10,7 +10,7 @@ import { QuotasService } from './quotas/quotas.service';
 export class AppController {
   constructor(
     private readonly appService: AppService,
-    private readonly quotasService: QuotasService
+    private readonly quotasService: QuotasService,
   ) {}
 
   /*
@@ -21,7 +21,7 @@ export class AppController {
   async chatCompletions(
     @Body() body: any,
     @User() user: any,
-    @Res() response: Response
+    @Res() response: Response,
   ) {
     return this.handleChatRequest(body, user, response, false);
   }
@@ -34,7 +34,7 @@ export class AppController {
   async chatCompletionsTest(
     @Body() body: any,
     @User() user: any,
-    @Res() response: Response
+    @Res() response: Response,
   ) {
     return this.handleChatRequest(body, user, response, true);
   }
@@ -43,7 +43,7 @@ export class AppController {
     body: any,
     user: any,
     response: Response,
-    isTest: boolean
+    isTest: boolean,
   ) {
     const { messages, model, stream = false } = body;
 
@@ -63,7 +63,7 @@ export class AppController {
       });
     }
 
-    if(user.credits <= 0 && !isTest) {
+    if (user.credits <= 0 && !isTest) {
       return response.json({
         error: {
           message: 'No credits left.',
@@ -81,41 +81,18 @@ export class AppController {
       .map((msg) => msg.content)
       .join('\n');
 
-    if (stream) {
-      response.setHeader('Content-Type', 'text/event-stream');
-      response.setHeader('Cache-Control', 'no-cache');
-      response.setHeader('Connection', 'keep-alive');
-
-      try {
-        const stream = await this.appService.streamResponse({
-          model,
-          systemPrompt,
-          userPrompt,
-          userId: user.uid,
-          isTest
-        });
-
-        for await (const chunk of stream) {
-          response.write(`data: ${JSON.stringify(chunk)}\n\n`);
-        }
-        response.end();
-      } catch (error) {
-        response.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
-        response.end();
-      }
-    } else {
-      try {
-        const result = await this.appService.callApi({
-          model,
-          systemPrompt,
-          userPrompt,
-          userId: user.uid,
-          isTest
-        });
-        response.json(result);
-      } catch (error) {
-        response.status(500).json({ error: error.message });
-      }
+    try {
+      const result = await this.appService.callApi({
+        model,
+        systemPrompt,
+        userPrompt,
+        userId: user.uid,
+        isTest,
+      });
+      await this.quotasService.decrementQuota(user.uid, model);
+      response.json(result);
+    } catch (error) {
+      response.status(500).json({ error: error.message });
     }
   }
 }
