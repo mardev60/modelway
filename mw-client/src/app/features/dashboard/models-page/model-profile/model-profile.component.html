@@ -63,7 +63,14 @@
           </thead>
           <tbody>
             <tr *ngFor="let model of models" class="border-t border-gray-200">
-              <td class="py-3 px-4 font-medium">{{ model.providerName }}</td>
+              <td class="py-3 px-4 font-medium">
+                <a
+                  [routerLink]="['/app/providers', model.providerName]"
+                  class="text-primary-600 hover:text-primary-800 hover:underline"
+                >
+                  {{ model.providerName }}
+                </a>
+              </td>
               <td class="py-3 px-4">
                 {{ model.latency !== null ? model.latency + "ms" : "N/A" }}
               </td>
