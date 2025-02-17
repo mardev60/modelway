@@ -19,9 +19,6 @@
       <div class="mt-6">
         <h2 class="text-xl font-semibold mb-4">Modèles disponibles</h2>
 
-        <!-- --------------  -->
-
-        <!-- <div class="space-y-6" *ngIf="models && models.length > 0"> -->
         <div class="space-y-6">
           <div class="bg-white rounded-lg shadow">
             <table class="min-w-full">
@@ -72,44 +69,13 @@
                     <span> </span>
                   </td>
                 </tr>
-                <!-- <tr *ngFor="let model of models" class="border-t border-gray-200">
-              <td class="py-3 px-4 font-medium">{{ model.providerName }}</td>
-              <td class="py-3 px-4">
-                {{ model.latency !== null ? (model.latency + 'ms') : 'N/A' }}
-              </td>
-              <td class="py-3 px-4">
-                <span [class.text-black-600]="isOld(model.formattedLastPing)" class="flex items-center gap-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
-                  </svg>
-                  {{ formatTimeAgo(model.formattedLastPing) }}
-                </span>
-              </td>
-              <td class="py-3 px-4">
-                <div class="flex flex-col">
-                  <span class="text-sm text-gray-600">Input: {{ model.input_price }}€</span>
-                  <span class="text-sm text-gray-600">Output: {{ model.output_price }}€</span>
-                </div>
-              </td>
-              <td class="py-3 px-4">
-                <span 
-                  [class]="getStatusColor(model.latency).text + ' ' + getStatusColor(model.latency).bg"
-                  class="px-2 py-1 rounded-full text-sm"
-                >
-                  {{ getStatus(model.latency) }}
-                </span>
-              </td>
-            </tr> -->
               </tbody>
             </table>
           </div>
         </div>
-
-        <!-- --------------  -->
-
-        <!-- <div *ngIf="!models || models.length === 0" class="text-gray-500">
+        <div *ngIf="!models || models.length === 0" class="text-gray-500">
           Aucun modèle disponible pour ce provider.
-        </div> -->
+        </div>
       </div>
     </div>
 
