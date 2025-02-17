@@ -33,6 +33,7 @@ import { ModelProfileComponent } from './features/dashboard/models-page/model-pr
 import { HistoryPageComponent } from './features/dashboard/history-page/history-page.component';
 import { LandingPageComponent } from './features/landing/landing-page/landing-page.component';
 import { BillingPageComponent } from './features/dashboard/billing-page/billing-page.component';
+import { ProviderProfileComponent } from './features/dashboard/providers-page/provider-profile/provider-profile.component';
 
 @NgModule({
   declarations: [
@@ -56,7 +57,8 @@ import { BillingPageComponent } from './features/dashboard/billing-page/billing-
     ModelProfileComponent,
     HistoryPageComponent,
     LandingPageComponent,
-    BillingPageComponent
+    BillingPageComponent,
+    ProviderProfileComponent
   ],
   imports: [
     BrowserModule,
