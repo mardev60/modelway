@@ -10,7 +10,7 @@ import { QuotasService } from './quotas/quotas.service';
 export class AppController {
   constructor(
     private readonly appService: AppService,
-    private readonly quotasService: QuotasService
+    private readonly quotasService: QuotasService,
   ) {}
 
   /*
@@ -21,7 +21,7 @@ export class AppController {
   async chatCompletions(
     @Body() body: any,
     @User() user: any,
-    @Res() response: Response
+    @Res() response: Response,
   ) {
     return this.handleChatRequest(body, user, response, false);
   }
@@ -34,7 +34,7 @@ export class AppController {
   async chatCompletionsTest(
     @Body() body: any,
     @User() user: any,
-    @Res() response: Response
+    @Res() response: Response,
   ) {
     return this.handleChatRequest(body, user, response, true);
   }
@@ -43,7 +43,7 @@ export class AppController {
     body: any,
     user: any,
     response: Response,
-    isTest: boolean
+    isTest: boolean,
   ) {
     const { messages, model, stream = false } = body;
 
@@ -63,7 +63,7 @@ export class AppController {
       });
     }
 
-    if(user.credits <= 0 && !isTest) {
+    if (user.credits <= 0 && !isTest) {
       return response.json({
         error: {
           message: 'No credits left.',
@@ -92,7 +92,7 @@ export class AppController {
           systemPrompt,
           userPrompt,
           userId: user.uid,
-          isTest
+          isTest,
         });
 
         for await (const chunk of stream) {
@@ -110,9 +110,10 @@ export class AppController {
           systemPrompt,
           userPrompt,
           userId: user.uid,
-          isTest
+          isTest,
         });
         response.json(result);
+        isTest ? await this.quotasService.decrementQuota(user.uid, model) : null;
       } catch (error) {
         response.status(500).json({ error: error.message });
       }
