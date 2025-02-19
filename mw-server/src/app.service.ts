@@ -1,10 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import OpenAI from 'openai';
+import { HistoryService } from './history/history.service';
+import { QuotasService } from './quotas/quotas.service';
 import { FirebaseService } from './services/firebase.service';
+import { UsersService } from './users/users.service';
 import { Model } from './utils/types/models.interface';
 import { Provider } from './utils/types/providers.interface';
-import { HistoryService } from './history/history.service';
-import { UsersService } from './users/users.service';
 type ChatMessage = OpenAI.Chat.ChatCompletionMessageParam;
 
 interface APICallOptions {
@@ -29,7 +30,8 @@ export class AppService {
   constructor(
     private readonly firebaseService: FirebaseService,
     private readonly historyService: HistoryService,
-    private readonly usersService: UsersService
+    private readonly usersService: UsersService,
+    private readonly quotasService: QuotasService,
   ) {}
 
   async callApi({
@@ -40,34 +42,37 @@ export class AppService {
     maxRetries = 4,
     retryDelay = 500,
     userId,
-    isTest = false
+    isTest = false,
   }: APICallOptions): Promise<OpenAI.Chat.Completions.ChatCompletion> {
     this.logger.log(`Calling API for model ${model} (classement ${classment})`);
 
     if (!this.allProviders.length) {
-      const providersSnapshot = await this.firebaseService.getFirestore()
+      const providersSnapshot = await this.firebaseService
+        .getFirestore()
         .collection(this.providersCollection)
         .get();
-      
-      this.allProviders = providersSnapshot.docs.map(doc => ({
+
+      this.allProviders = providersSnapshot.docs.map((doc) => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       })) as Provider[];
     }
 
     // Count providers for the model
-    const modelsSnapshot = await this.firebaseService.getFirestore()
+    const modelsSnapshot = await this.firebaseService
+      .getFirestore()
       .collection(this.modelsCollection)
       .where('name', '==', model)
       .get();
-    
+
     const providersCount = modelsSnapshot.size;
     if (classment > providersCount) {
       throw new Error(`All providers for model ${model} have failed`);
     }
 
     // Get provider for the model and classment
-    const providerSnapshot = await this.firebaseService.getFirestore()
+    const providerSnapshot = await this.firebaseService
+      .getFirestore()
       .collection(this.modelsCollection)
       .where('name', '==', model)
       .where('classment', '==', classment)
@@ -81,12 +86,12 @@ export class AppService {
 
     const provider = {
       id: providerSnapshot.docs[0].id,
-      ...providerSnapshot.docs[0].data()
+      ...providerSnapshot.docs[0].data(),
     } as Model;
 
     const messages: ChatMessage[] = [
       { role: 'system', content: systemPrompt },
-      { role: 'user', content: userPrompt }
+      { role: 'user', content: userPrompt },
     ] as ChatMessage[];
 
     for (let retry = 0; retry < maxRetries; retry++) {
@@ -105,33 +110,44 @@ export class AppService {
         // Move totalCost declaration outside the if block
         let totalCost = 0;
         if (!isTest) {
-          const inputCost = ((response.usage.prompt_tokens * Number(provider.input_price)) / 1_000_000) + 
-                           ((response.usage.prompt_tokens * 0.0010) / 1_000) + 0.0001;
-          const outputCost = ((response.usage.completion_tokens * Number(provider.output_price)) / 1_000_000) + 
-                            ((response.usage.completion_tokens * 0.0020) / 1_000) + 0.0001;
+          const inputCost =
+            (response.usage.prompt_tokens * Number(provider.input_price)) /
+              1_000_000 +
+            (response.usage.prompt_tokens * 0.001) / 1_000 +
+            0.0001;
+          const outputCost =
+            (response.usage.completion_tokens * Number(provider.output_price)) /
+              1_000_000 +
+            (response.usage.completion_tokens * 0.002) / 1_000 +
+            0.0001;
           totalCost = inputCost + outputCost;
           this.usersService.decrementCredits(userId, totalCost);
         }
 
         // Save history asynchronously without waiting for it
-        this.historyService.create({
-          userId,
-          timestamp: new Date(),
-          model: model,
-          app: 'Modelway API CALL',
-          inputTokens: response.usage.prompt_tokens,
-          outputTokens: response.usage.completion_tokens,
-          cost: isTest ? 0 : totalCost,
-          speed: response.usage.total_tokens,
-          provider: this.getProviderName(provider.provider_id)
-        }).catch(error => {
-          this.logger.error('Error saving history:', error);
-        });
+        this.historyService
+          .create({
+            userId,
+            timestamp: new Date(),
+            model: model,
+            app: 'Modelway API CALL',
+            inputTokens: response.usage.prompt_tokens,
+            outputTokens: response.usage.completion_tokens,
+            cost: isTest ? 0 : totalCost,
+            speed: response.usage.total_tokens,
+            provider: this.getProviderName(provider.provider_id),
+          })
+          .catch((error) => {
+            this.logger.error('Error saving history:', error);
+          });
+
+        // Décrémenter le quota dans tous les cas
+        await this.quotasService.decrementQuota(userId, model);
 
         return response;
       } catch (error) {
         this.logger.error(
-          `Provider ${this.getProviderName(provider.provider_id)} for ${provider.name} (classment ${classment}, retry ${retry + 1}/${maxRetries})`
+          `Provider ${this.getProviderName(provider.provider_id)} for ${provider.name} (classment ${classment}, retry ${retry + 1}/${maxRetries})`,
         );
 
         if (retry < maxRetries - 1) {
@@ -163,9 +179,11 @@ export class AppService {
     maxRetries = 4,
     retryDelay = 500,
     userId,
-    isTest = false
+    isTest = false,
   }: APICallOptions) {
-    this.logger.log(`Streaming API for model ${model} (classement ${classment})`);
+    this.logger.log(
+      `Streaming API for model ${model} (classement ${classment})`,
+    );
 
     // Initialize providers if needed (same as in callApi)
     if (!this.allProviders.length) {
@@ -213,7 +231,7 @@ export class AppService {
 
     const messages: ChatMessage[] = [
       { role: 'system', content: systemPrompt },
-      { role: 'user', content: userPrompt }
+      { role: 'user', content: userPrompt },
     ] as ChatMessage[];
 
     for (let retry = 0; retry < maxRetries; retry++) {
@@ -237,7 +255,7 @@ export class AppService {
         // Return an async generator that yields chunks
         const generator = async function* () {
           let fullResponse = '';
-          
+
           for await (const chunk of stream) {
             if (chunk.choices[0]?.delta?.content) {
               const content = chunk.choices[0].delta.content;
@@ -252,15 +270,22 @@ export class AppService {
               };
             }
           }
-          
 
           // à modifier pour calculer le nombre de tokens correctement
-          const promptTokens = Math.ceil((systemPrompt.length + userPrompt.length) / 4);
+          const promptTokens = Math.ceil(
+            (systemPrompt.length + userPrompt.length) / 4,
+          );
           const completionTokens = Math.ceil(fullResponse.length / 4);
-          
+
           const endTime = Date.now();
-          const inputCost = ((promptTokens* Number(provider.input_price)) / 1_000_000) + ((promptTokens * 0.0010) / 1_000) + 0.0001;
-          const outputCost = ((completionTokens * Number(provider.output_price)) / 1_000_000) + ((completionTokens * 0.0020) / 1_000) + 0.0001;
+          const inputCost =
+            (promptTokens * Number(provider.input_price)) / 1_000_000 +
+            (promptTokens * 0.001) / 1_000 +
+            0.0001;
+          const outputCost =
+            (completionTokens * Number(provider.output_price)) / 1_000_000 +
+            (completionTokens * 0.002) / 1_000 +
+            0.0001;
           const totalCost = inputCost + outputCost;
 
           // Only decrement credits if not in test mode
@@ -314,7 +339,10 @@ export class AppService {
     throw new Error('Unexpected end of execution');
   }
 
-  private async initializeOpenAI(baseURL: string, providerId: string): Promise<OpenAI> {
+  private async initializeOpenAI(
+    baseURL: string,
+    providerId: string,
+  ): Promise<OpenAI> {
     return new OpenAI({
       baseURL,
       apiKey: this.getApiKey(providerId),
