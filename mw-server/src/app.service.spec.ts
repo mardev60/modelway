@@ -15,6 +15,7 @@ describe('AppService', () => {
   let service: AppService;
   let usersService: UsersService;
   let quotasService: QuotasService;
+  let historyService: HistoryService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -61,6 +62,7 @@ describe('AppService', () => {
     service = module.get<AppService>(AppService);
     usersService = module.get<UsersService>(UsersService);
     quotasService = module.get<QuotasService>(QuotasService);
+    historyService = module.get<HistoryService>(HistoryService);
 
     // Setup mocks
     mockCollection.get.mockResolvedValue(mockSnapshot);
@@ -71,7 +73,7 @@ describe('AppService', () => {
     expect(service).toBeDefined();
   });
 
-  describe('callApi', () => {
+  describe('callApi in REST API call mode', () => {
     it('should successfully call the API and return a response', async () => {
       // Mock OpenAI chat completion
       jest.spyOn(service as any, 'initializeOpenAI').mockResolvedValue({
@@ -100,6 +102,33 @@ describe('AppService', () => {
       );
     });
 
+    it('should create history when callApi is called', async () => {
+      jest.spyOn(service as any, 'initializeOpenAI').mockResolvedValue({
+        chat: {
+          completions: {
+            create: jest.fn().mockResolvedValue(mockChatGPTResponse),
+          },
+        },
+      });
+
+      await service.callApi({
+        model: 'gpt-4',
+        systemPrompt: 'Test prompt',
+        userPrompt: 'Test message',
+        userId: 'user1',
+        isTest: false,
+      });
+
+      expect(historyService.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: 'user1',
+          app: 'Modelway API CALL',
+          model: 'gpt-4',
+          provider: 'OpenAI',
+        }),
+      );
+    });
+
     it('should throw error when no provider is found', async () => {
       mockCollection.get.mockResolvedValueOnce({
         ...mockSnapshot,
@@ -116,33 +145,33 @@ describe('AppService', () => {
         }),
       ).rejects.toThrow('All providers for model gpt-4 have failed');
     });
+  });
 
-    describe('test mode', () => {
-      beforeEach(() => {
-        jest.spyOn(service as any, 'initializeOpenAI').mockResolvedValue({
-          chat: {
-            completions: {
-              create: jest.fn().mockResolvedValue(mockChatGPTResponse),
-            },
+  describe('callApi in chat mode', () => {
+    beforeEach(() => {
+      jest.spyOn(service as any, 'initializeOpenAI').mockResolvedValue({
+        chat: {
+          completions: {
+            create: jest.fn().mockResolvedValue(mockChatGPTResponse),
           },
-        });
+        },
+      });
+    });
+
+    it('should decrement test quota instead of credits', async () => {
+      await service.callApi({
+        model: 'gpt-4',
+        systemPrompt: 'You are a helpful assistant',
+        userPrompt: 'Hello',
+        userId: 'user1',
+        isTest: true,
       });
 
-      it('should decrement quota instead of credits for test calls', async () => {
-        await service.callApi({
-          model: 'gpt-4',
-          systemPrompt: 'You are a helpful assistant',
-          userPrompt: 'Hello',
-          userId: 'user1',
-          isTest: true,
-        });
-
-        expect(quotasService.decrementQuota).toHaveBeenCalledWith(
-          'user1',
-          'gpt-4',
-        );
-        expect(usersService.decrementCredits).not.toHaveBeenCalled();
-      });
+      expect(quotasService.decrementQuota).toHaveBeenCalledWith(
+        'user1',
+        'gpt-4',
+      );
+      expect(usersService.decrementCredits).not.toHaveBeenCalled();
     });
   });
 });
