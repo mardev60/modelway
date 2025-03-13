@@ -109,7 +109,7 @@ An Angular application that provides:
 
 ### Backend
 - **NestJS** - Efficient Node.js server-side framework
-- **MongoDB/Mongoose** - NoSQL database and ODM
+- **Firestore** - NoSQL database and ODM
 - **Firebase Admin** - For authentication and user management
 - **OpenAI SDK** - For interacting with OpenAI models
 
@@ -130,7 +130,7 @@ const response = await fetch('https://api.modelway.com/v1/chat/completions', {
     'Authorization': 'Bearer YOUR_API_KEY'
   },
   body: JSON.stringify({
-    model: 'gpt-4', // Will automatically failover to alternatives if unavailable
+    model: 'gpt-4',
     messages: [
       { role: 'system', content: 'You are a helpful assistant.' },
       { role: 'user', content: 'Tell me about AI orchestration.' }
